@@ -21,6 +21,23 @@ class CloudflareService
     }
 
     /**
+     * Получить путь к cloudflared
+     */
+    private function getCloudflaredPath(): string
+    {
+        $whichOutput = shell_exec('which cloudflared 2>/dev/null');
+        if (!empty($whichOutput)) {
+            return trim($whichOutput);
+        }
+        
+        if (file_exists($this->cloudflaredPath)) {
+            return $this->cloudflaredPath;
+        }
+        
+        return 'cloudflared';
+    }
+
+    /**
      * Получить список всех туннелей
      */
     public function getTunnels(): array
@@ -32,7 +49,10 @@ class CloudflareService
         }
 
         // Получаем список туннелей
-        $output = shell_exec('cloudflared tunnel list 2>/dev/null');
+        $cloudflaredPath = $this->getCloudflaredPath();
+        error_log("Cloudflare: Using path: " . $cloudflaredPath);
+        
+        $output = shell_exec("$cloudflaredPath tunnel list 2>&1");
         if (!$output) {
             error_log("Cloudflare: No output from cloudflared tunnel list");
             return $tunnels;
@@ -117,7 +137,8 @@ class CloudflareService
         $connections = [];
 
         // Получаем информацию о соединениях
-        $output = shell_exec("cloudflared tunnel info $tunnelId 2>/dev/null");
+        $cloudflaredPath = $this->getCloudflaredPath();
+        $output = shell_exec("$cloudflaredPath tunnel info $tunnelId 2>/dev/null");
         if (!$output) {
             return $connections;
         }
@@ -137,7 +158,8 @@ class CloudflareService
 
         // Если не нашли через tunnel info, попробуем из списка туннелей
         if (empty($connections)) {
-            $listOutput = shell_exec('cloudflared tunnel list 2>/dev/null');
+            $cloudflaredPath = $this->getCloudflaredPath();
+            $listOutput = shell_exec("$cloudflaredPath tunnel list 2>/dev/null");
             if ($listOutput) {
                 $lines = explode("\n", $listOutput);
                 foreach ($lines as $line) {
@@ -173,7 +195,8 @@ class CloudflareService
         $routes = [];
 
         // Получаем маршруты туннеля
-        $output = shell_exec("cloudflared tunnel route ip list --tunnel-id $tunnelId 2>/dev/null");
+        $cloudflaredPath = $this->getCloudflaredPath();
+        $output = shell_exec("$cloudflaredPath tunnel route ip list --tunnel-id $tunnelId 2>/dev/null");
         if (!$output) {
             return $routes;
         }
@@ -198,7 +221,8 @@ class CloudflareService
             return ['success' => false, 'error' => 'cloudflared не установлен'];
         }
 
-        $output = shell_exec("cloudflared tunnel create $name 2>&1");
+        $cloudflaredPath = $this->getCloudflaredPath();
+        $output = shell_exec("$cloudflaredPath tunnel create $name 2>&1");
         
         if (strpos($output, 'Created tunnel') !== false) {
             return ['success' => true, 'message' => "Туннель $name создан"];
@@ -216,7 +240,8 @@ class CloudflareService
             return ['success' => false, 'error' => 'cloudflared не установлен'];
         }
 
-        $output = shell_exec("cloudflared tunnel delete $tunnelId 2>&1");
+        $cloudflaredPath = $this->getCloudflaredPath();
+        $output = shell_exec("$cloudflaredPath tunnel delete $tunnelId 2>&1");
         
         if (strpos($output, 'Deleted tunnel') !== false) {
             return ['success' => true, 'message' => "Туннель удален"];
@@ -234,7 +259,8 @@ class CloudflareService
             return ['success' => false, 'error' => 'cloudflared не установлен'];
         }
 
-        $command = "cloudflared tunnel run $tunnelId";
+        $cloudflaredPath = $this->getCloudflaredPath();
+        $command = "$cloudflaredPath tunnel run $tunnelId";
         if ($configPath) {
             $command .= " --config $configPath";
         }
@@ -257,7 +283,8 @@ class CloudflareService
             return '';
         }
 
-        $output = shell_exec("cloudflared tunnel config show $tunnelId 2>/dev/null");
+        $cloudflaredPath = $this->getCloudflaredPath();
+        $output = shell_exec("$cloudflaredPath tunnel config show $tunnelId 2>/dev/null");
         return $output ?: '';
     }
 
