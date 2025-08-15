@@ -504,13 +504,30 @@ function sortProcesses() {
         return 0;
     });
     
+    // Отладочная информация для памяти
+    if (currentSort.column === 'rss' || currentSort.column === 'vsz') {
+        console.log('Сортировка по', currentSort.column, 'направление:', currentSort.direction);
+        console.log('Примеры значений:');
+        $rows.slice(0, 3).forEach(function(row) {
+            const $row = $(row);
+            const rawValue = $row.data(currentSort.column);
+            const parsedValue = parseMemorySize(rawValue);
+            console.log(`${rawValue} → ${parsedValue} байт`);
+        });
+    }
+    
     $tbody.append($rows);
 }
 
 function parseMemorySize(memoryString) {
-    // Парсим строки вида "128.5 KB", "2.1 MB", "1.0 GB"
+    // Парсим строки вида "128.5 KB", "2.1 MB", "1.0 GB", "0 B"
+    if (!memoryString || memoryString === '0 B') return 0;
+    
     const match = memoryString.match(/^([\d.]+)\s*([KMGT]?B)$/i);
-    if (!match) return 0;
+    if (!match) {
+        console.warn('Не удалось распарсить размер памяти:', memoryString);
+        return 0;
+    }
     
     const value = parseFloat(match[1]);
     const unit = match[2].toUpperCase();
@@ -521,7 +538,9 @@ function parseMemorySize(memoryString) {
         case 'MB': return value * 1024 * 1024;
         case 'GB': return value * 1024 * 1024 * 1024;
         case 'TB': return value * 1024 * 1024 * 1024 * 1024;
-        default: return value;
+        default: 
+            console.warn('Неизвестная единица измерения:', unit, 'в строке:', memoryString);
+            return value;
     }
 }
 
