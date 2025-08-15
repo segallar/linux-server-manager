@@ -9,6 +9,9 @@ class PackageService
      */
     public function getUpgradablePackages(): array
     {
+        // Временно отключаем для диагностики
+        return [];
+        
         $output = shell_exec('apt list --upgradable 2>/dev/null');
         if (!$output) {
             return [];
@@ -53,6 +56,9 @@ class PackageService
      */
     private function getInstalledPackagesCount(): int
     {
+        // Временно отключаем для диагностики
+        return 0;
+        
         $output = shell_exec('dpkg -l | grep "^ii" | wc -l 2>/dev/null');
         return (int)trim($output ?: '0');
     }
@@ -62,6 +68,9 @@ class PackageService
      */
     private function getSecurityUpdatesCount(): int
     {
+        // Временно отключаем для диагностики
+        return 0;
+        
         $output = shell_exec('apt list --upgradable 2>/dev/null | grep -i security | wc -l 2>/dev/null');
         return (int)trim($output ?: '0');
     }
