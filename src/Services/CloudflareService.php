@@ -239,7 +239,7 @@ class CloudflareService
 
         // Получаем маршруты туннеля
         $cloudflaredPath = $this->getCloudflaredPath();
-        $output = shell_exec("$cloudflaredPath tunnel route ip list --tunnel-id $tunnelId 2>/dev/null");
+        $output = shell_exec("$cloudflaredPath tunnel route ip show 2>/dev/null");
         if (!$output) {
             return $routes;
         }
