@@ -73,8 +73,15 @@ try {
     $_SERVER['REQUEST_URI'] = '/tunnels/wireguard';
     $app = new App\Core\Application(__DIR__ . '/..');
     
-    // Регистрируем маршрут
+    // Регистрируем ВСЕ маршруты как в index.php
+    $app->router->get('/', [App\Controllers\DashboardController::class, 'index']);
+    $app->router->get('/system', [App\Controllers\SystemController::class, 'index']);
+    $app->router->get('/processes', [App\Controllers\ProcessController::class, 'index']);
+    $app->router->get('/services', [App\Controllers\ServiceController::class, 'index']);
+    $app->router->get('/tunnels/ssh', [App\Controllers\TunnelController::class, 'ssh']);
+    $app->router->get('/tunnels/port-forwarding', [App\Controllers\TunnelController::class, 'portForwarding']);
     $app->router->get('/tunnels/wireguard', [App\Controllers\TunnelController::class, 'wireguard']);
+    $app->router->get('/tunnels/cloudflare', [App\Controllers\TunnelController::class, 'cloudflare']);
     
     $callback = $app->router->routes['get']['/tunnels/wireguard'] ?? false;
     if ($callback) {
