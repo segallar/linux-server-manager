@@ -18,7 +18,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Всего процессов</h6>
-                            <h3 class="mb-0" id="total-processes">0</h3>
+                            <h3 class="mb-0"><?= $stats['total'] ?></h3>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-tasks fa-2x"></i>
@@ -33,7 +33,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Активные</h6>
-                            <h3 class="mb-0" id="active-processes">0</h3>
+                            <h3 class="mb-0"><?= $stats['active'] ?></h3>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-play fa-2x"></i>
@@ -48,7 +48,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Спящие</h6>
-                            <h3 class="mb-0" id="sleeping-processes">0</h3>
+                            <h3 class="mb-0"><?= $stats['sleeping'] ?></h3>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-pause fa-2x"></i>
@@ -63,7 +63,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Остановленные</h6>
-                            <h3 class="mb-0" id="stopped-processes">0</h3>
+                            <h3 class="mb-0"><?= $stats['stopped'] ?></h3>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-stop fa-2x"></i>
@@ -96,10 +96,78 @@
                             <th>Действия</th>
                         </tr>
                     </thead>
-                    <tbody id="processes-table">
-                        <tr>
-                            <td colspan="8" class="text-center">Загрузка процессов...</td>
-                        </tr>
+                    <tbody>
+                        <?php if (!empty($processes)): ?>
+                            <?php foreach ($processes as $process): ?>
+                            <tr>
+                                <td><strong><?= htmlspecialchars($process['pid']) ?></strong></td>
+                                <td>
+                                    <div>
+                                        <strong><?= htmlspecialchars(substr($process['command'], 0, 20)) ?><?= strlen($process['command']) > 20 ? '...' : '' ?></strong>
+                                        <br>
+                                        <small class="text-muted"><?= htmlspecialchars($process['vsz']) ?> / <?= htmlspecialchars($process['rss']) ?></small>
+                                    </div>
+                                </td>
+                                <td><?= htmlspecialchars($process['user']) ?></td>
+                                <td>
+                                    <span class="badge <?= (float)$process['cpu'] > 10 ? 'bg-danger' : ((float)$process['cpu'] > 5 ? 'bg-warning' : 'bg-success') ?>">
+                                        <?= htmlspecialchars($process['cpu']) ?>%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge <?= (float)$process['mem'] > 10 ? 'bg-danger' : ((float)$process['mem'] > 5 ? 'bg-warning' : 'bg-success') ?>">
+                                        <?= htmlspecialchars($process['mem']) ?>%
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php
+                                    $statusClass = 'bg-secondary';
+                                    $statusText = 'Неизвестно';
+                                    
+                                    switch ($process['status']) {
+                                        case 'active':
+                                            $statusClass = 'bg-success';
+                                            $statusText = 'Активен';
+                                            break;
+                                        case 'sleeping':
+                                            $statusClass = 'bg-warning';
+                                            $statusText = 'Спящий';
+                                            break;
+                                        case 'stopped':
+                                            $statusClass = 'bg-danger';
+                                            $statusText = 'Остановлен';
+                                            break;
+                                        case 'zombie':
+                                            $statusClass = 'bg-dark';
+                                            $statusText = 'Зомби';
+                                            break;
+                                    }
+                                    ?>
+                                    <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
+                                </td>
+                                <td><?= htmlspecialchars($process['time']) ?></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button class="btn btn-outline-info" onclick="showProcessInfo(<?= $process['pid'] ?>)" title="Информация">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                        <?php if ($process['status'] === 'active'): ?>
+                                        <button class="btn btn-outline-warning" onclick="pauseProcess(<?= $process['pid'] ?>)" title="Приостановить">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                        <?php endif; ?>
+                                        <button class="btn btn-outline-danger" onclick="stopProcess(<?= $process['pid'] ?>)" title="Остановить">
+                                            <i class="fas fa-stop"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8" class="text-center">Нет данных о процессах</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -147,49 +215,68 @@
     </div>
 </div>
 
+<!-- Модальное окно для информации о процессе -->
+<div class="modal fade" id="processInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Информация о процессе</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="processInfoContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 $(document).ready(function() {
-    loadProcesses();
-    setInterval(loadProcesses, 10000); // Обновляем каждые 10 секунд
+    // Автообновление каждые 30 секунд
+    setInterval(function() {
+        location.reload();
+    }, 30000);
 });
 
-function loadProcesses() {
-    // Здесь будет AJAX запрос для получения списка процессов
-    // Пока используем заглушки
-    $('#total-processes').text('156');
-    $('#active-processes').text('142');
-    $('#sleeping-processes').text('12');
-    $('#stopped-processes').text('2');
-    
-    // Обновляем таблицу
-    $('#processes-table').html(`
-        <tr>
-            <td>1</td>
-            <td>systemd</td>
-            <td>root</td>
-            <td>0.1%</td>
-            <td>0.2%</td>
-            <td><span class="badge bg-success">Активен</span></td>
-            <td>2:15:30</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="pauseProcess(1)"><i class="fas fa-pause"></i></button>
-                <button class="btn btn-sm btn-danger" onclick="stopProcess(1)"><i class="fas fa-stop"></i></button>
-            </td>
-        </tr>
-        <tr>
-            <td>1234</td>
-            <td>nginx</td>
-            <td>www-data</td>
-            <td>2.3%</td>
-            <td>1.5%</td>
-            <td><span class="badge bg-success">Активен</span></td>
-            <td>0:45:12</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="pauseProcess(1234)"><i class="fas fa-pause"></i></button>
-                <button class="btn btn-sm btn-danger" onclick="stopProcess(1234)"><i class="fas fa-stop"></i></button>
-            </td>
-        </tr>
+function showProcessInfo(pid) {
+    $('#processInfoModal').modal('show');
+    $('#processInfoContent').html(`
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+        </div>
     `);
+    
+    // Здесь будет AJAX запрос для получения информации о процессе
+    // Пока показываем заглушку
+    setTimeout(function() {
+        $('#processInfoContent').html(`
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Основная информация</h6>
+                    <p><strong>PID:</strong> ${pid}</p>
+                    <p><strong>Команда:</strong> Процесс ${pid}</p>
+                    <p><strong>Пользователь:</strong> root</p>
+                    <p><strong>Статус:</strong> <span class="badge bg-success">Активен</span></p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Ресурсы</h6>
+                    <p><strong>CPU:</strong> 0.5%</p>
+                    <p><strong>RAM:</strong> 1.2%</p>
+                    <p><strong>Время работы:</strong> 2:15:30</p>
+                    <p><strong>Виртуальная память:</strong> 128 MB</p>
+                </div>
+            </div>
+        `);
+    }, 1000);
 }
 
 function startProcess() {
@@ -206,20 +293,39 @@ function startProcess() {
     showAlert(`Процесс "${command}" запущен`, 'success');
     $('#newProcessModal').modal('hide');
     $('#newProcessForm')[0].reset();
-    loadProcesses();
+    location.reload();
 }
 
 function pauseProcess(pid) {
-    // Здесь будет AJAX запрос для приостановки процесса
-    showAlert(`Процесс ${pid} приостановлен`, 'warning');
-    loadProcesses();
+    if (confirm(`Приостановить процесс ${pid}?`)) {
+        // Здесь будет AJAX запрос для приостановки процесса
+        showAlert(`Процесс ${pid} приостановлен`, 'warning');
+        location.reload();
+    }
 }
 
 function stopProcess(pid) {
     if (confirm(`Вы уверены, что хотите остановить процесс ${pid}?`)) {
         // Здесь будет AJAX запрос для остановки процесса
         showAlert(`Процесс ${pid} остановлен`, 'danger');
-        loadProcesses();
+        location.reload();
     }
+}
+
+function showAlert(message, type = 'info') {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Добавляем уведомление в начало страницы
+    $('.container-fluid').prepend(alertHtml);
+    
+    // Автоматически скрываем через 3 секунды
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 3000);
 }
 </script>

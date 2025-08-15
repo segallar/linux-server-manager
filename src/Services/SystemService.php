@@ -173,6 +173,106 @@ class SystemService
     }
 
     /**
+     * Получить все процессы с детальной информацией
+     */
+    public function getAllProcesses(): array
+    {
+        $output = shell_exec("ps aux 2>/dev/null");
+        $lines = explode("\n", trim($output));
+        
+        $processes = [];
+        
+        // Пропускаем заголовок
+        for ($i = 1; $i < count($lines); $i++) {
+            $line = trim($lines[$i]);
+            if (empty($line)) continue;
+            
+            $parts = preg_split('/\s+/', $line, 11);
+            if (count($parts) < 11) continue;
+            
+            $processes[] = [
+                'pid' => $parts[1],
+                'user' => $parts[0],
+                'cpu' => $parts[2],
+                'mem' => $parts[3],
+                'vsz' => $this->formatBytes((int)$parts[4] * 1024),
+                'rss' => $this->formatBytes((int)$parts[5] * 1024),
+                'tty' => $parts[6],
+                'stat' => $parts[7],
+                'start' => $parts[8],
+                'time' => $parts[9],
+                'command' => $parts[10],
+                'status' => $this->getProcessStatus($parts[7])
+            ];
+        }
+        
+        return $processes;
+    }
+
+    /**
+     * Получить статистику процессов
+     */
+    public function getProcessStats(): array
+    {
+        $processes = $this->getAllProcesses();
+        
+        $stats = [
+            'total' => count($processes),
+            'active' => 0,
+            'sleeping' => 0,
+            'stopped' => 0,
+            'zombie' => 0,
+            'other' => 0
+        ];
+        
+        foreach ($processes as $process) {
+            $status = $process['status'];
+            switch ($status) {
+                case 'active':
+                    $stats['active']++;
+                    break;
+                case 'sleeping':
+                    $stats['sleeping']++;
+                    break;
+                case 'stopped':
+                    $stats['stopped']++;
+                    break;
+                case 'zombie':
+                    $stats['zombie']++;
+                    break;
+                default:
+                    $stats['other']++;
+                    break;
+            }
+        }
+        
+        return $stats;
+    }
+
+    /**
+     * Определить статус процесса по stat
+     */
+    private function getProcessStatus(string $stat): string
+    {
+        $firstChar = substr($stat, 0, 1);
+        
+        switch ($firstChar) {
+            case 'R': // Running
+                return 'active';
+            case 'S': // Sleeping
+                return 'sleeping';
+            case 'T': // Stopped
+                return 'stopped';
+            case 'Z': // Zombie
+                return 'zombie';
+            case 'D': // Uninterruptible sleep
+                return 'sleeping';
+            default:
+                return 'other';
+        }
+    }
+
+    /**
      * Получить общую статистику
      */
     public function getStats(): array
