@@ -4,18 +4,27 @@ namespace App\Services;
 
 class PackageService
 {
+    private const CACHE_DURATION = 300; // 5 минут
+    private const CACHE_FILE = '/tmp/package_cache.json';
+
     /**
      * Получить список доступных обновлений
      */
     public function getUpgradablePackages(): array
     {
+        // Проверяем кэш
+        $cached = $this->getCachedData('upgradable');
+        if ($cached !== null) {
+            return $cached;
+        }
+
         // Проверяем, что команда apt доступна
         if (!file_exists('/usr/bin/apt')) {
             return [];
         }
         
         // Добавляем таймаут для избежания зависания
-        $output = shell_exec('timeout 10 apt list --upgradable 2>/dev/null');
+        $output = shell_exec('timeout 15 apt list --upgradable 2>/dev/null');
         if (!$output) {
             return [];
         }
@@ -34,6 +43,8 @@ class PackageService
             }
         }
 
+        // Кэшируем результат
+        $this->setCachedData('upgradable', $packages);
         return $packages;
     }
 
@@ -42,16 +53,26 @@ class PackageService
      */
     public function getPackageStats(): array
     {
+        // Проверяем кэш
+        $cached = $this->getCachedData('stats');
+        if ($cached !== null) {
+            return $cached;
+        }
+
         $upgradable = $this->getUpgradablePackages();
         $installed = $this->getInstalledPackagesCount();
         $security = $this->getSecurityUpdatesCount();
 
-        return [
+        $stats = [
             'total_installed' => $installed,
             'upgradable' => count($upgradable),
             'security_updates' => $security,
             'last_update' => $this->getLastUpdateTime()
         ];
+
+        // Кэшируем результат
+        $this->setCachedData('stats', $stats);
+        return $stats;
     }
 
     /**
@@ -65,7 +86,7 @@ class PackageService
         }
         
         // Добавляем таймаут для избежания зависания
-        $output = shell_exec('timeout 5 dpkg -l | grep "^ii" | wc -l 2>/dev/null');
+        $output = shell_exec('timeout 10 dpkg -l | grep "^ii" | wc -l 2>/dev/null');
         return (int)trim($output ?: '0');
     }
 
@@ -80,7 +101,7 @@ class PackageService
         }
         
         // Добавляем таймаут для избежания зависания
-        $output = shell_exec('timeout 10 apt list --upgradable 2>/dev/null | grep -i security | wc -l 2>/dev/null');
+        $output = shell_exec('timeout 15 apt list --upgradable 2>/dev/null | grep -i security | wc -l 2>/dev/null');
         return (int)trim($output ?: '0');
     }
 
@@ -151,7 +172,10 @@ class PackageService
             return ['success' => false, 'message' => 'sudo не доступен'];
         }
         
-        $output = shell_exec('timeout 30 sudo apt update 2>&1');
+        // Очищаем кэш перед обновлением
+        $this->clearCache();
+        
+        $output = shell_exec('timeout 60 sudo apt update 2>&1');
         $success = strpos($output, 'Reading package lists') !== false;
         
         return [
@@ -165,7 +189,15 @@ class PackageService
      */
     public function upgradeAllPackages(): array
     {
-        $output = shell_exec('timeout 300 sudo apt upgrade -y 2>&1'); // 5 минут для обновления
+        // Проверяем права sudo
+        if (!file_exists('/usr/bin/sudo')) {
+            return ['success' => false, 'message' => 'sudo не доступен'];
+        }
+        
+        // Очищаем кэш перед обновлением
+        $this->clearCache();
+        
+        $output = shell_exec('timeout 600 sudo apt upgrade -y 2>&1'); // 10 минут для обновления
         $success = strpos($output, 'upgraded') !== false || strpos($output, '0 upgraded') !== false;
         
         return [
@@ -179,7 +211,15 @@ class PackageService
      */
     public function upgradePackage(string $packageName): array
     {
-        $output = shell_exec("timeout 60 sudo apt install $packageName -y 2>&1");
+        // Проверяем права sudo
+        if (!file_exists('/usr/bin/sudo')) {
+            return ['success' => false, 'message' => 'sudo не доступен'];
+        }
+        
+        // Очищаем кэш перед обновлением
+        $this->clearCache();
+        
+        $output = shell_exec("timeout 120 sudo apt install $packageName -y 2>&1");
         $success = strpos($output, 'upgraded') !== false || strpos($output, 'already the newest version') !== false;
         
         return [
@@ -189,91 +229,20 @@ class PackageService
     }
 
     /**
-     * Получить информацию о пакете
-     */
-    public function getPackageInfo(string $packageName): ?array
-    {
-        $output = shell_exec("apt show $packageName 2>/dev/null");
-        if (!$output) {
-            return null;
-        }
-
-        $info = [
-            'name' => $packageName,
-            'version' => '',
-            'description' => '',
-            'size' => '',
-            'depends' => [],
-            'maintainer' => '',
-            'homepage' => ''
-        ];
-
-        $lines = explode("\n", $output);
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            if (preg_match('/^Version:\s+(.+)$/', $line, $matches)) {
-                $info['version'] = $matches[1];
-            } elseif (preg_match('/^Description:\s+(.+)$/', $line, $matches)) {
-                $info['description'] = $matches[1];
-            } elseif (preg_match('/^Installed-Size:\s+(.+)$/', $line, $matches)) {
-                $info['size'] = $matches[1];
-            } elseif (preg_match('/^Depends:\s+(.+)$/', $line, $matches)) {
-                $info['depends'] = array_map('trim', explode(',', $matches[1]));
-            } elseif (preg_match('/^Maintainer:\s+(.+)$/', $line, $matches)) {
-                $info['maintainer'] = $matches[1];
-            } elseif (preg_match('/^Homepage:\s+(.+)$/', $line, $matches)) {
-                $info['homepage'] = $matches[1];
-            }
-        }
-
-        return $info;
-    }
-
-    /**
-     * Получить список неиспользуемых пакетов
-     */
-    public function getUnusedPackages(): array
-    {
-        $output = shell_exec('apt list --installed 2>/dev/null | grep -v "WARNING"');
-        if (!$output) {
-            return [];
-        }
-
-        $lines = explode("\n", trim($output));
-        $unused = [];
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            if (preg_match('/^([^\/]+)\//', $line, $matches)) {
-                $packageName = $matches[1];
-                
-                // Проверяем, используется ли пакет
-                $usage = shell_exec("apt-cache rdepends $packageName 2>/dev/null | wc -l");
-                $usageCount = (int)trim($usage ?: '0');
-                
-                if ($usageCount <= 1) { // Только сам пакет
-                    $unused[] = [
-                        'name' => $packageName,
-                        'usage_count' => $usageCount
-                    ];
-                }
-            }
-        }
-
-        return array_slice($unused, 0, 50); // Возвращаем только первые 50
-    }
-
-    /**
      * Очистить кэш пакетов
      */
     public function cleanPackageCache(): array
     {
-        $output = shell_exec('sudo apt clean 2>&1');
-        $success = empty($output) || strpos($output, 'error') === false;
+        // Проверяем права sudo
+        if (!file_exists('/usr/bin/sudo')) {
+            return ['success' => false, 'message' => 'sudo не доступен'];
+        }
+        
+        // Очищаем кэш приложения
+        $this->clearCache();
+        
+        $output = shell_exec('timeout 60 sudo apt clean 2>&1');
+        $success = strpos($output, 'Cleaning') !== false || empty($output);
         
         return [
             'success' => $success,
@@ -282,16 +251,130 @@ class PackageService
     }
 
     /**
-     * Автоматическое удаление неиспользуемых пакетов
+     * Удалить неиспользуемые пакеты
      */
     public function autoremovePackages(): array
     {
-        $output = shell_exec('sudo apt autoremove -y 2>&1');
-        $success = strpos($output, 'removed') !== false || strpos($output, '0 to remove') !== false;
+        // Проверяем права sudo
+        if (!file_exists('/usr/bin/sudo')) {
+            return ['success' => false, 'message' => 'sudo не доступен'];
+        }
+        
+        // Очищаем кэш приложения
+        $this->clearCache();
+        
+        $output = shell_exec('timeout 120 sudo apt autoremove -y 2>&1');
+        $success = strpos($output, 'removed') !== false || strpos($output, '0 upgraded') !== false;
         
         return [
             'success' => $success,
             'message' => $success ? 'Неиспользуемые пакеты удалены' : 'Ошибка удаления: ' . $output
         ];
+    }
+
+    /**
+     * Получить информацию о пакете
+     */
+    public function getPackageInfo(string $packageName): ?array
+    {
+        if (!file_exists('/usr/bin/apt')) {
+            return null;
+        }
+        
+        $output = shell_exec("timeout 10 apt show $packageName 2>/dev/null");
+        if (!$output) {
+            return null;
+        }
+
+        $info = [];
+        $lines = explode("\n", $output);
+        
+        foreach ($lines as $line) {
+            if (preg_match('/^([^:]+):\s*(.+)$/', $line, $matches)) {
+                $key = trim($matches[1]);
+                $value = trim($matches[2]);
+                $info[$key] = $value;
+            }
+        }
+
+        return $info;
+    }
+
+    /**
+     * Получить неиспользуемые пакеты
+     */
+    public function getUnusedPackages(): array
+    {
+        // Проверяем кэш
+        $cached = $this->getCachedData('unused');
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        if (!file_exists('/usr/bin/apt')) {
+            return [];
+        }
+        
+        $output = shell_exec('timeout 30 apt-mark showmanual | xargs apt-mark showauto 2>/dev/null');
+        if (!$output) {
+            return [];
+        }
+
+        $packages = [];
+        $lines = explode("\n", trim($output));
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (!empty($line)) {
+                $packages[] = $line;
+            }
+        }
+
+        // Кэшируем результат
+        $this->setCachedData('unused', $packages);
+        return $packages;
+    }
+
+    /**
+     * Кэширование данных
+     */
+    private function getCachedData(string $key): ?array
+    {
+        if (!file_exists(self::CACHE_FILE)) {
+            return null;
+        }
+
+        $cache = json_decode(file_get_contents(self::CACHE_FILE), true);
+        if (!$cache || !isset($cache[$key]) || !isset($cache[$key]['timestamp'])) {
+            return null;
+        }
+
+        if (time() - $cache[$key]['timestamp'] > self::CACHE_DURATION) {
+            return null;
+        }
+
+        return $cache[$key]['data'];
+    }
+
+    private function setCachedData(string $key, array $data): void
+    {
+        $cache = [];
+        if (file_exists(self::CACHE_FILE)) {
+            $cache = json_decode(file_get_contents(self::CACHE_FILE), true) ?: [];
+        }
+
+        $cache[$key] = [
+            'data' => $data,
+            'timestamp' => time()
+        ];
+
+        file_put_contents(self::CACHE_FILE, json_encode($cache));
+    }
+
+    private function clearCache(): void
+    {
+        if (file_exists(self::CACHE_FILE)) {
+            unlink(self::CACHE_FILE);
+        }
     }
 }

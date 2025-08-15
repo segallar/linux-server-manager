@@ -4,41 +4,57 @@ namespace App\Core;
 
 class Application
 {
-    public static string $ROOT_DIR;
-    public static Application $app;
     public Router $router;
     public Request $request;
     public Response $response;
-    public ?Controller $controller = null;
+    public string $rootPath;
 
-    public function __construct($rootPath)
+    public function __construct(string $rootPath)
     {
-        self::$ROOT_DIR = $rootPath;
-        self::$app = $this;
+        $this->rootPath = $rootPath;
         $this->request = new Request();
         $this->response = new Response();
         $this->router = new Router($this->request, $this->response);
+        
+        // Устанавливаем таймауты для предотвращения 504 ошибок
+        $this->setTimeouts();
+    }
+
+    private function setTimeouts(): void
+    {
+        // Увеличиваем лимиты выполнения
+        set_time_limit(300);
+        ini_set('max_execution_time', '300');
+        ini_set('memory_limit', '256M');
+        
+        // Отключаем ограничения на ввод
+        ini_set('max_input_time', '300');
+        ini_set('post_max_size', '50M');
+        ini_set('upload_max_filesize', '50M');
     }
 
     public function run()
     {
         try {
-            echo $this->router->resolve();
+            // Проверяем, что запрос не превышает лимиты
+            if ($this->request->isPost() && $_SERVER['CONTENT_LENGTH'] > 50 * 1024 * 1024) {
+                $this->response->setStatusCode(413);
+                echo json_encode(['error' => 'Request too large']);
+                return;
+            }
+
+            $this->router->resolve();
         } catch (\Exception $e) {
-            $this->response->setStatusCode($e->getCode());
-            echo $this->router->renderView('_error', [
-                'exception' => $e
-            ]);
+            // Логируем ошибку
+            error_log("Application error: " . $e->getMessage());
+            
+            // Возвращаем ошибку клиенту
+            $this->response->setStatusCode(500);
+            if ($this->request->isAjax()) {
+                echo json_encode(['error' => 'Internal server error']);
+            } else {
+                echo "Internal server error";
+            }
         }
-    }
-
-    public function getController(): Controller
-    {
-        return $this->controller;
-    }
-
-    public function setController(Controller $controller): void
-    {
-        $this->controller = $controller;
     }
 }
