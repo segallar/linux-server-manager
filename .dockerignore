@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+
+# Документация
+README.md
+DEPLOYMENT.md
+*.md
+
+# Логи
+logs/
+*.log
+
+# Временные файлы
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Тесты
+tests/
+phpunit.xml
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Развертывание
+deploy.sh
+
+# Конфигурация разработки
+.env.example
+.env.local
+.env.development
+
+# Кеш
+.cache/
+vendor/
+node_modules/
+
+# Резервные копии
+*.bak
+*.backup
