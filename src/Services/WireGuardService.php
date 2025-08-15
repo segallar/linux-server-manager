@@ -118,7 +118,7 @@ class WireGuardService
                 }
                 elseif (preg_match('/^latest handshake:\s+(.+)$/', $line, $matches)) {
                     $currentPeer['latest_handshake'] = $matches[1];
-                    $currentPeer['status'] = 'active';
+                    $currentPeer['status'] = $this->getPeerStatus($matches[1]);
                 }
                 elseif (preg_match('/^transfer:\s+(\d+)\s+B\s+received,\s+(\d+)\s+B\s+sent/', $line, $matches)) {
                     $currentPeer['transfer']['received'] = $this->formatBytes($matches[1]);
@@ -273,6 +273,65 @@ class WireGuardService
         }
         
         return round($bytes, $precision) . ' ' . $units[$i];
+    }
+
+    /**
+     * Форматировать время последнего handshake
+     */
+    public function formatHandshakeTime($handshakeTime): string
+    {
+        if (empty($handshakeTime) || $handshakeTime === '0') {
+            return 'Никогда';
+        }
+
+        // Парсим время в формате "2024-01-15 10:30:45"
+        $timestamp = strtotime($handshakeTime);
+        if ($timestamp === false) {
+            return 'Неизвестно';
+        }
+
+        $now = time();
+        $diff = $now - $timestamp;
+
+        if ($diff < 60) {
+            return 'Только что';
+        } elseif ($diff < 3600) {
+            $minutes = floor($diff / 60);
+            return $minutes . ' мин назад';
+        } elseif ($diff < 86400) {
+            $hours = floor($diff / 3600);
+            return $hours . ' ч назад';
+        } elseif ($diff < 2592000) {
+            $days = floor($diff / 86400);
+            return $days . ' дн назад';
+        } else {
+            return date('d.m.Y H:i', $timestamp);
+        }
+    }
+
+    /**
+     * Получить статус пира на основе времени handshake
+     */
+    public function getPeerStatus($handshakeTime): string
+    {
+        if (empty($handshakeTime) || $handshakeTime === '0') {
+            return 'inactive';
+        }
+
+        $timestamp = strtotime($handshakeTime);
+        if ($timestamp === false) {
+            return 'unknown';
+        }
+
+        $now = time();
+        $diff = $now - $timestamp;
+
+        // Если handshake был больше 5 минут назад, считаем неактивным
+        if ($diff > 300) {
+            return 'inactive';
+        }
+
+        return 'active';
     }
 
     /**

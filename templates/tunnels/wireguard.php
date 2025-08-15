@@ -175,6 +175,81 @@
         </div>
     </div>
 
+    <!-- Таблица пиров -->
+    <?php if (!empty($interfaces)): ?>
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-users"></i> Все пиры WireGuard
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Интерфейс</th>
+                            <th>Публичный ключ</th>
+                            <th>Endpoint</th>
+                            <th>Allowed IPs</th>
+                            <th>Последний Handshake</th>
+                            <th>Статус</th>
+                            <th>Трафик</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($interfaces as $interface): ?>
+                            <?php foreach ($interface['peers'] as $peer): ?>
+                            <tr>
+                                <td>
+                                    <strong><?= htmlspecialchars($interface['name']) ?></strong>
+                                </td>
+                                <td>
+                                    <code class="small"><?= htmlspecialchars(substr($peer['public_key'], 0, 20)) ?>...</code>
+                                    <button class="btn btn-sm btn-outline-secondary ms-1" onclick="copyToClipboard('<?= htmlspecialchars($peer['public_key']) ?>')" title="Копировать ключ">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                                <td><?= htmlspecialchars($peer['endpoint']) ?: '-' ?></td>
+                                <td>
+                                    <?php if (!empty($peer['allowed_ips'])): ?>
+                                        <?php foreach ($peer['allowed_ips'] as $ip): ?>
+                                            <span class="badge bg-light text-dark"><?= htmlspecialchars($ip) ?></span>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php 
+                                    $wireguardService = new \App\Services\WireGuardService();
+                                    $handshakeTime = $wireguardService->formatHandshakeTime($peer['latest_handshake']);
+                                    ?>
+                                    <span class="text-muted"><?= $handshakeTime ?></span>
+                                </td>
+                                <td>
+                                    <?php if ($peer['status'] === 'active'): ?>
+                                        <span class="badge bg-success">Активен</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary">Неактивен</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <small>
+                                        <div>↓ <?= $peer['transfer']['received'] ?></div>
+                                        <div>↑ <?= $peer['transfer']['sent'] ?></div>
+                                    </small>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Детальная информация об интерфейсе -->
     <div class="modal fade" id="interfaceDetailModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -359,5 +434,14 @@ function createInterface() {
     $('#newInterfaceModal').modal('hide');
     $('#newInterfaceForm')[0].reset();
     setTimeout(() => location.reload(), 1000);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        showAlert('Ключ скопирован в буфер обмена', 'success');
+    }).catch(function(err) {
+        console.error('Ошибка копирования: ', err);
+        showAlert('Ошибка копирования', 'danger');
+    });
 }
 </script>
