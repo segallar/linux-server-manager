@@ -42,9 +42,18 @@ class TunnelController extends Controller
     
     public function cloudflare()
     {
+        $cloudflareService = new \App\Services\CloudflareService();
+
+        $tunnels = $cloudflareService->getTunnels();
+        $stats = $cloudflareService->getStats();
+        $isInstalled = $cloudflareService->isInstalled();
+
         return $this->render('tunnels/cloudflare', [
             'title' => 'Cloudflare',
-            'currentPage' => 'tunnels'
+            'currentPage' => 'tunnels',
+            'tunnels' => $tunnels,
+            'stats' => $stats,
+            'isInstalled' => $isInstalled
         ]);
     }
 }
