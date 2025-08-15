@@ -2,53 +2,49 @@
 
 namespace App\Controllers;
 
-class TunnelController
+use App\Core\Controller;
+use App\Services\WireGuardService;
+
+class TunnelController extends Controller
 {
     public function ssh()
     {
-        $currentPage = 'tunnels-ssh';
-        $title = 'SSH туннели - Linux Server Manager';
-        
-        ob_start();
-        include __DIR__ . '/../../templates/tunnels/ssh.php';
-        $content = ob_get_clean();
-        
-        include __DIR__ . '/../../templates/layout.php';
+        return $this->render('tunnels/ssh', [
+            'title' => 'SSH туннели',
+            'currentPage' => 'tunnels'
+        ]);
     }
     
     public function portForwarding()
     {
-        $currentPage = 'tunnels-port-forwarding';
-        $title = 'Проброс портов - Linux Server Manager';
-        
-        ob_start();
-        include __DIR__ . '/../../templates/tunnels/port-forwarding.php';
-        $content = ob_get_clean();
-        
-        include __DIR__ . '/../../templates/layout.php';
+        return $this->render('tunnels/port-forwarding', [
+            'title' => 'Проброс портов',
+            'currentPage' => 'tunnels'
+        ]);
     }
     
     public function wireguard()
     {
-        $currentPage = 'tunnels-wireguard';
-        $title = 'WireGuard - Linux Server Manager';
+        $wireguardService = new WireGuardService();
         
-        ob_start();
-        include __DIR__ . '/../../templates/tunnels/wireguard.php';
-        $content = ob_get_clean();
+        $interfaces = $wireguardService->getInterfaces();
+        $stats = $wireguardService->getStats();
+        $isInstalled = $wireguardService->isInstalled();
         
-        include __DIR__ . '/../../templates/layout.php';
+        return $this->render('tunnels/wireguard', [
+            'title' => 'WireGuard',
+            'currentPage' => 'tunnels',
+            'interfaces' => $interfaces,
+            'stats' => $stats,
+            'isInstalled' => $isInstalled
+        ]);
     }
     
     public function cloudflare()
     {
-        $currentPage = 'tunnels-cloudflare';
-        $title = 'Cloudflare - Linux Server Manager';
-        
-        ob_start();
-        include __DIR__ . '/../../templates/tunnels/cloudflare.php';
-        $content = ob_get_clean();
-        
-        include __DIR__ . '/../../templates/layout.php';
+        return $this->render('tunnels/cloudflare', [
+            'title' => 'Cloudflare',
+            'currentPage' => 'tunnels'
+        ]);
     }
 }
