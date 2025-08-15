@@ -124,11 +124,15 @@ class SystemService
         return [
             'os' => $this->getOsInfo(),
             'kernel' => $this->getKernelInfo(),
+            'architecture' => $this->getArchitecture(),
             'uptime' => $this->getUptime(),
             'load' => $this->getLoadAverage(),
             'users' => $this->getConnectedUsers(),
             'date' => date('Y-m-d H:i:s'),
-            'hostname' => gethostname()
+            'timezone' => date_default_timezone_get(),
+            'hostname' => gethostname(),
+            'domain' => $this->getDomain(),
+            'boot_time' => $this->getBootTime()
         ];
     }
 
@@ -290,6 +294,22 @@ class SystemService
             }
         }
         
+        // Дополнительная проверка для WireGuard интерфейсов
+        foreach ($interfaces as $name => &$interface) {
+            if (strpos($name, 'wg') === 0) { // WireGuard интерфейсы начинаются с wg
+                // Проверяем, есть ли IP адреса - если есть, значит интерфейс активен
+                if (!empty($interface['ips'])) {
+                    $interface['status'] = 'up';
+                }
+                
+                // Дополнительная проверка через ip link
+                $linkOutput = shell_exec("ip link show $name 2>/dev/null");
+                if (strpos($linkOutput, 'UP') !== false) {
+                    $interface['status'] = 'up';
+                }
+            }
+        }
+        
         return $interfaces;
     }
 
@@ -302,5 +322,118 @@ class SystemService
         }
         
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    private function getArchitecture(): string
+    {
+        return trim(shell_exec('uname -m 2>/dev/null') ?: 'Unknown');
+    }
+
+    private function getDomain(): string
+    {
+        $domain = shell_exec('hostname -d 2>/dev/null');
+        return trim($domain ?: 'local');
+    }
+
+    private function getBootTime(): string
+    {
+        $uptime = file_get_contents('/proc/uptime');
+        $seconds = (int)explode(' ', $uptime)[0];
+        $bootTime = time() - $seconds;
+        return date('Y-m-d H:i:s', $bootTime);
+    }
+
+    /**
+     * Получить детальную информацию о CPU
+     */
+    public function getDetailedCpuInfo(): array
+    {
+        $cpuInfo = file_get_contents('/proc/cpuinfo');
+        
+        // Получаем модель CPU
+        preg_match('/model name\s+:\s+(.+)/', $cpuInfo, $modelMatches);
+        $model = $modelMatches[1] ?? 'Unknown';
+        
+        // Получаем количество ядер
+        $cores = substr_count($cpuInfo, 'processor');
+        
+        // Получаем частоту
+        preg_match('/cpu MHz\s+:\s+([0-9.]+)/', $cpuInfo, $freqMatches);
+        $frequency = $freqMatches[1] ?? 'Unknown';
+        
+        // Получаем кэш
+        preg_match('/cache size\s+:\s+([0-9]+)/', $cpuInfo, $cacheMatches);
+        $cache = $cacheMatches[1] ?? 'Unknown';
+        
+        return [
+            'model' => $model,
+            'cores' => $cores,
+            'frequency' => $frequency,
+            'cache' => $cache . ' KB',
+            'load' => sys_getloadavg()
+        ];
+    }
+
+    /**
+     * Получить детальную информацию о дисках
+     */
+    public function getDetailedDiskInfo(): array
+    {
+        $output = shell_exec('df -h 2>/dev/null');
+        $lines = explode("\n", trim($output));
+        
+        $disks = [];
+        
+        // Пропускаем заголовок
+        for ($i = 1; $i < count($lines); $i++) {
+            $line = trim($lines[$i]);
+            if (empty($line)) continue;
+            
+            $parts = preg_split('/\s+/', $line);
+            if (count($parts) < 6) continue;
+            
+            $disks[] = [
+                'filesystem' => $parts[0],
+                'size' => $parts[1],
+                'used' => $parts[2],
+                'available' => $parts[3],
+                'usage_percent' => (int)rtrim($parts[4], '%'),
+                'mounted_on' => $parts[5]
+            ];
+        }
+        
+        return $disks;
+    }
+
+    /**
+     * Получить количество процессов
+     */
+    public function getProcessCount(): int
+    {
+        $output = shell_exec('ps aux | wc -l 2>/dev/null');
+        return (int)trim($output ?: '0') - 1; // Вычитаем заголовок
+    }
+
+    /**
+     * Получить детальную информацию о системе
+     */
+    public function getDetailedSystemInfo(): array
+    {
+        $cpu = $this->getDetailedCpuInfo();
+        $memory = $this->getMemoryInfo();
+        $disk = $this->getDetailedDiskInfo();
+        $network = $this->getNetworkInfo();
+        $system = $this->getSystemInfo();
+        $processCount = $this->getProcessCount();
+        
+        return [
+            'cpu' => $cpu,
+            'memory' => $memory,
+            'disk' => $disk,
+            'network' => $network,
+            'system' => $system,
+            'process_count' => $processCount,
+            'timestamp' => time()
+        ];
     }
 }
