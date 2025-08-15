@@ -115,6 +115,18 @@
                         <option value="command">По имени</option>
                     </select>
                 </div>
+                <div class="col-md-2 mb-2">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input" type="checkbox" id="hideKernelThreads" checked>
+                        <label class="form-check-label" for="hideKernelThreads">
+                            Скрыть kernel threads
+                            <i class="fas fa-question-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               data-bs-placement="top" 
+                               title="Kernel threads - это процессы ядра Linux, отображаемые в квадратных скобках [kthreadd], [ksoftirqd], [kworker] и т.д. Они управляют системными ресурсами и обычно не требуют внимания пользователя."></i>
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -362,6 +374,11 @@ function initFilters() {
         filterProcesses();
     });
     
+    // Фильтр kernel threads
+    $('#hideKernelThreads').on('change', function() {
+        filterProcesses();
+    });
+    
     // Сортировка
     $('#sortBy').on('change', function() {
         currentSort.column = $(this).val();
@@ -392,6 +409,7 @@ function filterProcesses() {
     const searchTerm = $('#searchProcess').val().toLowerCase();
     const userFilter = $('#filterUser').val();
     const statusFilter = $('#filterStatus').val();
+    const hideKernelThreads = $('#hideKernelThreads').is(':checked');
     
     let visibleCount = 0;
     
@@ -404,18 +422,23 @@ function filterProcesses() {
         
         let show = true;
         
+        // Фильтр kernel threads (процессы в квадратных скобках)
+        if (hideKernelThreads && command.startsWith('[') && command.endsWith(']')) {
+            show = false;
+        }
+        
         // Поиск по PID или имени процесса
-        if (searchTerm && !pid.includes(searchTerm) && !command.includes(searchTerm)) {
+        if (show && searchTerm && !pid.includes(searchTerm) && !command.includes(searchTerm)) {
             show = false;
         }
         
         // Фильтр по пользователю
-        if (userFilter && user !== userFilter) {
+        if (show && userFilter && user !== userFilter) {
             show = false;
         }
         
         // Фильтр по статусу
-        if (statusFilter && status !== statusFilter) {
+        if (show && statusFilter && status !== statusFilter) {
             show = false;
         }
         
