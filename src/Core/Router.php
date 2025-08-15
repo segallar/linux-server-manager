@@ -52,13 +52,13 @@ class Router
     {
         $layoutContent = $this->layoutContent();
         $viewContent = $this->renderOnlyView($view, $params);
-        return str_replace('{{content}}', $viewContent, $layoutContent);
+        return str_replace('<?= $content ?? \'\' ?>', $viewContent, $layoutContent);
     }
 
     public function renderContent($viewContent)
     {
         $layoutContent = $this->layoutContent();
-        return str_replace('{{content}}', $viewContent, $layoutContent);
+        return str_replace('<?= $content ?? \'\' ?>', $viewContent, $layoutContent);
     }
 
     public function renderError($message, $code = 500)
