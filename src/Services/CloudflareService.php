@@ -14,9 +14,6 @@ class CloudflareService
         $cloudflaredExists = file_exists($this->cloudflaredPath);
         $whichOutput = shell_exec('which cloudflared 2>/dev/null');
         
-        error_log("Cloudflare: cloudflared exists: " . ($cloudflaredExists ? 'YES' : 'NO'));
-        error_log("Cloudflare: which cloudflared: " . ($whichOutput ?: 'NOT_FOUND'));
-        
         return $cloudflaredExists || !empty($whichOutput);
     }
 
@@ -42,7 +39,6 @@ class CloudflareService
         }
         
         if (!$certExists) {
-            error_log("Cloudflare: No certificate found in any location");
             return false;
         }
         
@@ -51,10 +47,6 @@ class CloudflareService
         
         // Если нет ошибки с сертификатом, значит авторизован
         $isAuth = strpos($output, 'originCertPath=') === false && strpos($output, 'Cannot determine default origin certificate path') === false;
-        
-        error_log("Cloudflare: Authentication check result: " . ($isAuth ? 'AUTHENTICATED' : 'NOT_AUTHENTICATED'));
-        // Убираем логирование большого вывода
-        // error_log("Cloudflare: Command output: " . $output);
         
         return $isAuth;
     }
@@ -88,22 +80,16 @@ class CloudflareService
         }
 
         if (!$this->isAuthenticated()) {
-            error_log("Cloudflare: Not authenticated - need to run cloudflared tunnel login");
             return $tunnels;
         }
 
         // Получаем список туннелей
         $cloudflaredPath = $this->getCloudflaredPath();
-        error_log("Cloudflare: Using path: " . $cloudflaredPath);
         
         $output = shell_exec("$cloudflaredPath tunnel list 2>&1");
         if (!$output) {
-            error_log("Cloudflare: No output from cloudflared tunnel list");
             return $tunnels;
         }
-
-        // Убираем логирование большого вывода
-        // error_log("Cloudflare: Raw output: " . $output);
 
         $lines = explode("\n", trim($output));
         
@@ -117,22 +103,17 @@ class CloudflareService
             // Ищем строку с заголовками
             if (strpos($line, 'ID') !== false && strpos($line, 'NAME') !== false) {
                 $headerFound = true;
-                error_log("Cloudflare: Header found: " . $line);
                 continue;
             }
 
             if ($headerFound) {
-                error_log("Cloudflare: Processing line: " . $line);
                 $tunnel = $this->parseTunnelLine($line);
                 if ($tunnel) {
-                    // Убираем логирование большого вывода
-                // error_log("Cloudflare: Parsed tunnel: " . json_encode($tunnel));
                     $tunnels[] = $tunnel;
                 }
             }
         }
 
-        error_log("Cloudflare: Total tunnels found: " . count($tunnels));
         return $tunnels;
     }
 
@@ -146,7 +127,6 @@ class CloudflareService
         $parts = preg_split('/\s+/', $line);
         
         if (count($parts) < 3) {
-            error_log("Cloudflare: Invalid line format: " . $line);
             return null;
         }
 
@@ -162,8 +142,6 @@ class CloudflareService
                 $status = 'active';
             }
         }
-
-        error_log("Cloudflare: Parsed - ID: $id, Name: $name, Created: $created, Status: $status");
 
         return [
             'id' => $id,

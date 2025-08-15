@@ -17,11 +17,7 @@ class WireGuardService
         // Получаем список интерфейсов с sudo
         $output = shell_exec('sudo ' . $this->wgPath . ' show interfaces 2>&1');
 
-        // Логируем для отладки
-        error_log("WireGuard: wg show interfaces output: " . ($output ?: 'NULL'));
-
         if (!$output) {
-            error_log("WireGuard: No interfaces found or command failed");
             return $interfaces;
         }
 
@@ -341,9 +337,6 @@ class WireGuardService
     {
         $wgExists = file_exists($this->wgPath);
         $wgQuickExists = file_exists($this->wgQuickPath);
-        
-        error_log("WireGuard: wg exists: " . ($wgExists ? 'YES' : 'NO'));
-        error_log("WireGuard: wg-quick exists: " . ($wgQuickExists ? 'YES' : 'NO'));
         
         return $wgExists && $wgQuickExists;
     }
