@@ -6,7 +6,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\SystemController;
 use App\Controllers\ProcessController;
 use App\Controllers\ServiceController;
-use App\Controllers\TunnelController;
+use App\Controllers\NetworkController;
 
 // Загружаем переменные окружения
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
@@ -21,11 +21,19 @@ $app->router->get('/system', [SystemController::class, 'index']);
 $app->router->get('/processes', [ProcessController::class, 'index']);
 $app->router->get('/services', [ServiceController::class, 'index']);
 
-// Маршруты для туннелей
-$app->router->get('/tunnels/ssh', [TunnelController::class, 'ssh']);
-$app->router->get('/tunnels/port-forwarding', [TunnelController::class, 'portForwarding']);
-$app->router->get('/tunnels/wireguard', [TunnelController::class, 'wireguard']);
-$app->router->get('/tunnels/cloudflare', [TunnelController::class, 'cloudflare']);
+// Маршруты для сети
+$app->router->get('/network/ssh', [NetworkController::class, 'ssh']);
+$app->router->get('/network/port-forwarding', [NetworkController::class, 'portForwarding']);
+$app->router->get('/network/wireguard', [NetworkController::class, 'wireguard']);
+$app->router->get('/network/cloudflare', [NetworkController::class, 'cloudflare']);
+$app->router->get('/network/routing', [NetworkController::class, 'routing']);
+
+// API маршруты для управления сервисами
+$app->router->post('/api/services/start', [ServiceController::class, 'start']);
+$app->router->post('/api/services/stop', [ServiceController::class, 'stop']);
+$app->router->post('/api/services/restart', [ServiceController::class, 'restart']);
+$app->router->post('/api/services/enable', [ServiceController::class, 'enable']);
+$app->router->post('/api/services/disable', [ServiceController::class, 'disable']);
 
 // Запускаем приложение
 $app->run();

@@ -160,77 +160,155 @@ $(document).ready(function() {
 });
 
 function loadServices() {
-    // Здесь будет AJAX запрос для получения списка сервисов
-    // Пока используем заглушки
-    $('#total-services').text('24');
-    $('#active-services').text('18');
-    $('#stopped-services').text('4');
-    $('#failed-services').text('2');
+    // Обновляем статистику
+    $('#total-services').text('<?= $stats['total'] ?>');
+    $('#active-services').text('<?= $stats['active'] ?>');
+    $('#stopped-services').text('<?= $stats['inactive'] ?>');
+    $('#failed-services').text('<?= $stats['failed'] ?>');
     
     // Обновляем таблицу
-    $('#services-table').html(`
-        <tr>
-            <td>nginx</td>
-            <td>A high performance web server</td>
-            <td><span class="badge bg-success">Активен</span></td>
-            <td><span class="badge bg-success">Включен</span></td>
-            <td>2 дня, 15 часов</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="restartService('nginx')"><i class="fas fa-redo"></i></button>
-                <button class="btn btn-sm btn-danger" onclick="stopService('nginx')"><i class="fas fa-stop"></i></button>
-            </td>
-        </tr>
-        <tr>
-            <td>mysql</td>
-            <td>MySQL database server</td>
-            <td><span class="badge bg-success">Активен</span></td>
-            <td><span class="badge bg-success">Включен</span></td>
-            <td>1 день, 8 часов</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="restartService('mysql')"><i class="fas fa-redo"></i></button>
-                <button class="btn btn-sm btn-danger" onclick="stopService('mysql')"><i class="fas fa-stop"></i></button>
-            </td>
-        </tr>
-        <tr>
-            <td>apache2</td>
-            <td>Apache web server</td>
-            <td><span class="badge bg-warning">Остановлен</span></td>
-            <td><span class="badge bg-secondary">Отключен</span></td>
-            <td>-</td>
-            <td>
-                <button class="btn btn-sm btn-success" onclick="startService('apache2')"><i class="fas fa-play"></i></button>
-                <button class="btn btn-sm btn-info" onclick="enableService('apache2')"><i class="fas fa-toggle-on"></i></button>
-            </td>
-        </tr>
-    `);
+    let tableHtml = '';
+    <?php if (!empty($services)): ?>
+        <?php foreach ($services as $service): ?>
+        tableHtml += `
+            <tr>
+                <td><?= htmlspecialchars($service['name']) ?></td>
+                <td><?= htmlspecialchars($service['description']) ?></td>
+                <td>
+                    <?php
+                    $statusBadge = match($service['status']) {
+                        'active' => 'bg-success',
+                        'inactive' => 'bg-warning',
+                        'failed' => 'bg-danger',
+                        default => 'bg-secondary'
+                    };
+                    $statusText = match($service['status']) {
+                        'active' => 'Активен',
+                        'inactive' => 'Остановлен',
+                        'failed' => 'Ошибка',
+                        default => 'Неизвестно'
+                    };
+                    ?>
+                    <span class="badge <?= $statusBadge ?>"><?= $statusText ?></span>
+                </td>
+                <td>
+                    <?php if ($service['enabled']): ?>
+                        <span class="badge bg-success">Включен</span>
+                    <?php else: ?>
+                        <span class="badge bg-secondary">Отключен</span>
+                    <?php endif; ?>
+                </td>
+                <td><?= htmlspecialchars($service['uptime']) ?></td>
+                <td>
+                    <?php if ($service['status'] === 'active'): ?>
+                        <button class="btn btn-sm btn-warning" onclick="restartService('<?= htmlspecialchars($service['name']) ?>')" title="Перезапустить">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="stopService('<?= htmlspecialchars($service['name']) ?>')" title="Остановить">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    <?php else: ?>
+                        <button class="btn btn-sm btn-success" onclick="startService('<?= htmlspecialchars($service['name']) ?>')" title="Запустить">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    <?php endif; ?>
+                    <?php if ($service['enabled']): ?>
+                        <button class="btn btn-sm btn-info" onclick="disableService('<?= htmlspecialchars($service['name']) ?>')" title="Отключить автозапуск">
+                            <i class="fas fa-toggle-off"></i>
+                        </button>
+                    <?php else: ?>
+                        <button class="btn btn-sm btn-info" onclick="enableService('<?= htmlspecialchars($service['name']) ?>')" title="Включить автозапуск">
+                            <i class="fas fa-toggle-on"></i>
+                        </button>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        `;
+        <?php endforeach; ?>
+    <?php else: ?>
+        tableHtml = '<tr><td colspan="6" class="text-center">Нет сервисов</td></tr>';
+    <?php endif; ?>
+    
+    $('#services-table').html(tableHtml);
 }
 
 function startService(serviceName) {
-    // Здесь будет AJAX запрос для запуска сервиса
-    showAlert(`Сервис "${serviceName}" запущен`, 'success');
-    loadServices();
+    $.post('/api/services/start', { service: serviceName })
+        .done(function(response) {
+            if (response.success) {
+                showAlert(response.message, 'success');
+                loadServices();
+            } else {
+                showAlert(response.message, 'danger');
+            }
+        })
+        .fail(function() {
+            showAlert('Ошибка при запуске сервиса', 'danger');
+        });
 }
 
 function stopService(serviceName) {
     if (confirm(`Вы уверены, что хотите остановить сервис "${serviceName}"?`)) {
-        // Здесь будет AJAX запрос для остановки сервиса
-        showAlert(`Сервис "${serviceName}" остановлен`, 'warning');
-        loadServices();
+        $.post('/api/services/stop', { service: serviceName })
+            .done(function(response) {
+                if (response.success) {
+                    showAlert(response.message, 'warning');
+                    loadServices();
+                } else {
+                    showAlert(response.message, 'danger');
+                }
+            })
+            .fail(function() {
+                showAlert('Ошибка при остановке сервиса', 'danger');
+            });
     }
 }
 
 function restartService(serviceName) {
     if (confirm(`Вы уверены, что хотите перезапустить сервис "${serviceName}"?`)) {
-        // Здесь будет AJAX запрос для перезапуска сервиса
-        showAlert(`Сервис "${serviceName}" перезапущен`, 'info');
-        loadServices();
+        $.post('/api/services/restart', { service: serviceName })
+            .done(function(response) {
+                if (response.success) {
+                    showAlert(response.message, 'info');
+                    loadServices();
+                } else {
+                    showAlert(response.message, 'danger');
+                }
+            })
+            .fail(function() {
+                showAlert('Ошибка при перезапуске сервиса', 'danger');
+            });
     }
 }
 
 function enableService(serviceName) {
-    // Здесь будет AJAX запрос для включения автозапуска
-    showAlert(`Автозапуск для сервиса "${serviceName}" включен`, 'success');
-    loadServices();
+    $.post('/api/services/enable', { service: serviceName })
+        .done(function(response) {
+            if (response.success) {
+                showAlert(response.message, 'success');
+                loadServices();
+            } else {
+                showAlert(response.message, 'danger');
+            }
+        })
+        .fail(function() {
+            showAlert('Ошибка при включении автозапуска', 'danger');
+        });
+}
+
+function disableService(serviceName) {
+    $.post('/api/services/disable', { service: serviceName })
+        .done(function(response) {
+            if (response.success) {
+                showAlert(response.message, 'success');
+                loadServices();
+            } else {
+                showAlert(response.message, 'danger');
+            }
+        })
+        .fail(function() {
+            showAlert('Ошибка при отключении автозапуска', 'danger');
+        });
 }
 
 function createService() {

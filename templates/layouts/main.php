@@ -52,16 +52,17 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#tunnelsSubmenu">
+                            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#networkSubmenu">
                                 <i class="fas fa-network-wired"></i>
-                                <span>Туннели</span>
+                                <span>Сеть</span>
                                 <i class="fas fa-chevron-down ms-auto"></i>
                             </a>
-                            <div class="collapse submenu" id="tunnelsSubmenu">
-                                <a class="nav-link" href="/tunnels/ssh"><i class="fas fa-terminal"></i>SSH туннели</a>
-                                <a class="nav-link" href="/tunnels/port-forwarding"><i class="fas fa-exchange-alt"></i>Проброс портов</a>
-                                <a class="nav-link" href="/tunnels/wireguard"><i class="fas fa-lock"></i>WireGuard</a>
-                                <a class="nav-link" href="/tunnels/cloudflare"><i class="fas fa-cloud"></i>Cloudflare</a>
+                            <div class="collapse submenu" id="networkSubmenu">
+                                <a class="nav-link" href="/network/ssh"><i class="fas fa-terminal"></i>SSH туннели</a>
+                                <a class="nav-link" href="/network/port-forwarding"><i class="fas fa-exchange-alt"></i>Проброс портов</a>
+                                <a class="nav-link" href="/network/wireguard"><i class="fas fa-lock"></i>WireGuard</a>
+                                <a class="nav-link" href="/network/cloudflare"><i class="fas fa-cloud"></i>Cloudflare</a>
+                                <a class="nav-link" href="/network/routing"><i class="fas fa-route"></i>Маршрутизация</a>
                             </div>
                         </li>
                     </ul>

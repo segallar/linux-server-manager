@@ -4,22 +4,24 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\WireGuardService;
+use App\Services\CloudflareService;
+use App\Services\NetworkService;
 
-class TunnelController extends Controller
+class NetworkController extends Controller
 {
     public function ssh()
     {
-        return $this->render('tunnels/ssh', [
+        return $this->render('network/ssh', [
             'title' => 'SSH туннели',
-            'currentPage' => 'tunnels'
+            'currentPage' => 'network'
         ]);
     }
     
     public function portForwarding()
     {
-        return $this->render('tunnels/port-forwarding', [
+        return $this->render('network/port-forwarding', [
             'title' => 'Проброс портов',
-            'currentPage' => 'tunnels'
+            'currentPage' => 'network'
         ]);
     }
     
@@ -31,9 +33,9 @@ class TunnelController extends Controller
         $stats = $wireguardService->getStats();
         $isInstalled = $wireguardService->isInstalled();
         
-        return $this->render('tunnels/wireguard', [
+        return $this->render('network/wireguard', [
             'title' => 'WireGuard',
-            'currentPage' => 'tunnels',
+            'currentPage' => 'network',
             'interfaces' => $interfaces,
             'stats' => $stats,
             'isInstalled' => $isInstalled
@@ -42,18 +44,33 @@ class TunnelController extends Controller
     
     public function cloudflare()
     {
-        $cloudflareService = new \App\Services\CloudflareService();
+        $cloudflareService = new CloudflareService();
 
         $tunnels = $cloudflareService->getTunnels();
         $stats = $cloudflareService->getStats();
         $isInstalled = $cloudflareService->isInstalled();
 
-        return $this->render('tunnels/cloudflare', [
+        return $this->render('network/cloudflare', [
             'title' => 'Cloudflare',
-            'currentPage' => 'tunnels',
+            'currentPage' => 'network',
             'tunnels' => $tunnels,
             'stats' => $stats,
             'isInstalled' => $isInstalled
+        ]);
+    }
+
+    public function routing()
+    {
+        $networkService = new NetworkService();
+        
+        $routes = $networkService->getRoutes();
+        $stats = $networkService->getRoutingStats();
+        
+        return $this->render('network/routing', [
+            'title' => 'Маршрутизация',
+            'currentPage' => 'network',
+            'routes' => $routes,
+            'stats' => $stats
         ]);
     }
 }

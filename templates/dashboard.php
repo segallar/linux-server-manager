@@ -119,8 +119,8 @@
                             </button>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <button class="btn btn-outline-info w-100" onclick="location.href='/tunnels/ssh'">
-                                <i class="fas fa-network-wired"></i> Туннели
+                            <button class="btn btn-outline-info w-100" onclick="location.href='/network/ssh'">
+                                <i class="fas fa-network-wired"></i> Сеть
                             </button>
                         </div>
                     </div>
