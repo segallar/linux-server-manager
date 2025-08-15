@@ -492,8 +492,8 @@ function sortProcesses() {
                 bVal = $b.data('status');
                 break;
             case 'time':
-                aVal = $a.data('time');
-                bVal = $b.data('time');
+                aVal = parseTime($a.data('time'));
+                bVal = parseTime($b.data('time'));
                 break;
             default:
                 return 0;
@@ -523,6 +523,37 @@ function parseMemorySize(memoryString) {
         case 'TB': return value * 1024 * 1024 * 1024 * 1024;
         default: return value;
     }
+}
+
+function parseTime(timeString) {
+    // Парсим время в форматах:
+    // "0:00" - минуты:секунды
+    // "1:23:45" - часы:минуты:секунды
+    // "2-03:45:12" - дни-часы:минуты:секунды
+    
+    const parts = timeString.split(/[-:]/);
+    
+    if (parts.length === 2) {
+        // Формат "0:00" - минуты:секунды
+        const minutes = parseInt(parts[0]) || 0;
+        const seconds = parseInt(parts[1]) || 0;
+        return minutes * 60 + seconds;
+    } else if (parts.length === 3) {
+        // Формат "1:23:45" - часы:минуты:секунды
+        const hours = parseInt(parts[0]) || 0;
+        const minutes = parseInt(parts[1]) || 0;
+        const seconds = parseInt(parts[2]) || 0;
+        return hours * 3600 + minutes * 60 + seconds;
+    } else if (parts.length === 4) {
+        // Формат "2-03:45:12" - дни-часы:минуты:секунды
+        const days = parseInt(parts[0]) || 0;
+        const hours = parseInt(parts[1]) || 0;
+        const minutes = parseInt(parts[2]) || 0;
+        const seconds = parseInt(parts[3]) || 0;
+        return days * 86400 + hours * 3600 + minutes * 60 + seconds;
+    }
+    
+    return 0;
 }
 
 function showProcessInfo(pid) {
