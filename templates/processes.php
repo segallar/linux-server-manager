@@ -74,38 +74,92 @@
         </div>
     </div>
 
+    <!-- Фильтры и поиск -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label for="searchProcess" class="form-label">Поиск процесса</label>
+                    <input type="text" class="form-control" id="searchProcess" placeholder="Введите имя процесса или PID...">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterUser" class="form-label">Пользователь</label>
+                    <select class="form-select" id="filterUser">
+                        <option value="">Все пользователи</option>
+                        <?php
+                        $users = array_unique(array_column($processes, 'user'));
+                        sort($users);
+                        foreach ($users as $user):
+                        ?>
+                        <option value="<?= htmlspecialchars($user) ?>"><?= htmlspecialchars($user) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterStatus" class="form-label">Статус</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">Все статусы</option>
+                        <option value="active">Активные</option>
+                        <option value="sleeping">Спящие</option>
+                        <option value="stopped">Остановленные</option>
+                        <option value="zombie">Зомби</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label for="sortBy" class="form-label">Сортировка</label>
+                    <select class="form-select" id="sortBy">
+                        <option value="cpu">По CPU</option>
+                        <option value="mem">По RAM</option>
+                        <option value="pid">По PID</option>
+                        <option value="time">По времени</option>
+                        <option value="command">По имени</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Таблица процессов -->
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0">
                 <i class="fas fa-list"></i> Список процессов
+                <small class="text-muted ms-2" id="processCount">(<?= count($processes) ?> процессов)</small>
             </h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-striped table-hover" id="processesTable">
                     <thead>
                         <tr>
-                            <th>PID</th>
-                            <th>Имя</th>
-                            <th>Пользователь</th>
-                            <th>CPU %</th>
-                            <th>RAM %</th>
-                            <th>Статус</th>
-                            <th>Время</th>
+                            <th class="sortable" data-sort="pid">PID <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="command">Имя процесса <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="user">Пользователь <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="cpu">CPU % <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="mem">RAM % <i class="fas fa-sort"></i></th>
+                            <th>Используемая память</th>
+                            <th class="sortable" data-sort="status">Статус <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="time">Время <i class="fas fa-sort"></i></th>
                             <th>Действия</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (!empty($processes)): ?>
                             <?php foreach ($processes as $process): ?>
-                            <tr>
+                            <tr class="process-row" 
+                                data-pid="<?= htmlspecialchars($process['pid']) ?>"
+                                data-command="<?= htmlspecialchars(strtolower($process['command'])) ?>"
+                                data-user="<?= htmlspecialchars($process['user']) ?>"
+                                data-status="<?= htmlspecialchars($process['status']) ?>"
+                                data-cpu="<?= (float)$process['cpu'] ?>"
+                                data-mem="<?= (float)$process['mem'] ?>"
+                                data-time="<?= htmlspecialchars($process['time']) ?>">
                                 <td><strong><?= htmlspecialchars($process['pid']) ?></strong></td>
                                 <td>
                                     <div>
-                                        <strong><?= htmlspecialchars(substr($process['command'], 0, 20)) ?><?= strlen($process['command']) > 20 ? '...' : '' ?></strong>
+                                        <strong><?= htmlspecialchars(substr($process['command'], 0, 25)) ?><?= strlen($process['command']) > 25 ? '...' : '' ?></strong>
                                         <br>
-                                        <small class="text-muted"><?= htmlspecialchars($process['vsz']) ?> / <?= htmlspecialchars($process['rss']) ?></small>
+                                        <small class="text-muted"><?= htmlspecialchars($process['vsz']) ?></small>
                                     </div>
                                 </td>
                                 <td><?= htmlspecialchars($process['user']) ?></td>
@@ -118,6 +172,13 @@
                                     <span class="badge <?= (float)$process['mem'] > 10 ? 'bg-danger' : ((float)$process['mem'] > 5 ? 'bg-warning' : 'bg-success') ?>">
                                         <?= htmlspecialchars($process['mem']) ?>%
                                     </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong><?= htmlspecialchars($process['rss']) ?></strong>
+                                        <br>
+                                        <small class="text-muted">Физическая память</small>
+                                    </div>
                                 </td>
                                 <td>
                                     <?php
@@ -165,7 +226,7 @@
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" class="text-center">Нет данных о процессах</td>
+                                <td colspan="9" class="text-center">Нет данных о процессах</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -237,13 +298,189 @@
     </div>
 </div>
 
+<style>
+.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.sortable:hover {
+    background-color: #f8f9fa;
+}
+
+.sortable i {
+    margin-left: 5px;
+    opacity: 0.5;
+}
+
+.sortable.asc i::before {
+    content: "\f0de";
+    opacity: 1;
+}
+
+.sortable.desc i::before {
+    content: "\f0dd";
+    opacity: 1;
+}
+
+.process-row.hidden {
+    display: none;
+}
+
+#processCount {
+    font-size: 0.875rem;
+}
+</style>
+
 <script>
 $(document).ready(function() {
+    // Инициализация фильтров и сортировки
+    initFilters();
+    initSorting();
+    
     // Автообновление каждые 30 секунд
     setInterval(function() {
         location.reload();
     }, 30000);
 });
+
+let currentSort = { column: 'cpu', direction: 'desc' };
+
+function initFilters() {
+    // Поиск по процессам
+    $('#searchProcess').on('input', function() {
+        filterProcesses();
+    });
+    
+    // Фильтр по пользователю
+    $('#filterUser').on('change', function() {
+        filterProcesses();
+    });
+    
+    // Фильтр по статусу
+    $('#filterStatus').on('change', function() {
+        filterProcesses();
+    });
+    
+    // Сортировка
+    $('#sortBy').on('change', function() {
+        currentSort.column = $(this).val();
+        sortProcesses();
+    });
+}
+
+function initSorting() {
+    $('.sortable').on('click', function() {
+        const column = $(this).data('sort');
+        
+        if (currentSort.column === column) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort.column = column;
+            currentSort.direction = 'desc';
+        }
+        
+        // Обновляем визуальные индикаторы
+        $('.sortable').removeClass('asc desc');
+        $(this).addClass(currentSort.direction);
+        
+        sortProcesses();
+    });
+}
+
+function filterProcesses() {
+    const searchTerm = $('#searchProcess').val().toLowerCase();
+    const userFilter = $('#filterUser').val();
+    const statusFilter = $('#filterStatus').val();
+    
+    let visibleCount = 0;
+    
+    $('.process-row').each(function() {
+        const $row = $(this);
+        const pid = $row.data('pid').toString();
+        const command = $row.data('command');
+        const user = $row.data('user');
+        const status = $row.data('status');
+        
+        let show = true;
+        
+        // Поиск по PID или имени процесса
+        if (searchTerm && !pid.includes(searchTerm) && !command.includes(searchTerm)) {
+            show = false;
+        }
+        
+        // Фильтр по пользователю
+        if (userFilter && user !== userFilter) {
+            show = false;
+        }
+        
+        // Фильтр по статусу
+        if (statusFilter && status !== statusFilter) {
+            show = false;
+        }
+        
+        if (show) {
+            $row.removeClass('hidden');
+            visibleCount++;
+        } else {
+            $row.addClass('hidden');
+        }
+    });
+    
+    // Обновляем счетчик
+    $('#processCount').text(`(${visibleCount} процессов)`);
+}
+
+function sortProcesses() {
+    const $tbody = $('#processesTable tbody');
+    const $rows = $tbody.find('.process-row:not(.hidden)').get();
+    
+    $rows.sort(function(a, b) {
+        const $a = $(a);
+        const $b = $(b);
+        
+        let aVal, bVal;
+        
+        switch (currentSort.column) {
+            case 'pid':
+                aVal = parseInt($a.data('pid'));
+                bVal = parseInt($b.data('pid'));
+                break;
+            case 'cpu':
+                aVal = parseFloat($a.data('cpu'));
+                bVal = parseFloat($b.data('cpu'));
+                break;
+            case 'mem':
+                aVal = parseFloat($a.data('mem'));
+                bVal = parseFloat($b.data('mem'));
+                break;
+            case 'command':
+                aVal = $a.data('command');
+                bVal = $b.data('command');
+                break;
+            case 'user':
+                aVal = $a.data('user');
+                bVal = $b.data('user');
+                break;
+            case 'status':
+                aVal = $a.data('status');
+                bVal = $b.data('status');
+                break;
+            case 'time':
+                aVal = $a.data('time');
+                bVal = $b.data('time');
+                break;
+            default:
+                return 0;
+        }
+        
+        if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    $tbody.append($rows);
+}
 
 function showProcessInfo(pid) {
     $('#processInfoModal').modal('show');
