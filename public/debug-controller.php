@@ -18,10 +18,17 @@ try {
     if (method_exists($controller, 'wireguard')) {
         echo "<p style='color: green;'>✅ Метод wireguard существует</p>";
         
-        echo "<h2>3. Выполнение метода wireguard</h2>";
+        echo "<h2>3. Выполнение метода wireguard через маршрутизацию</h2>";
         try {
-            $result = $controller->wireguard();
-            echo "<p style='color: green;'>✅ Метод выполнен</p>";
+            // Создаем приложение и регистрируем маршрут
+            $_SERVER['REQUEST_URI'] = '/tunnels/wireguard';
+            $_SERVER['REQUEST_METHOD'] = 'GET';
+            
+            $app = new App\Core\Application(__DIR__ . '/..');
+            $app->router->get('/tunnels/wireguard', [App\Controllers\TunnelController::class, 'wireguard']);
+            
+            $result = $app->router->resolve();
+            echo "<p style='color: green;'>✅ Метод выполнен через маршрутизацию</p>";
             
             echo "<h3>Результат (длина: " . strlen($result) . " символов):</h3>";
             echo "<div style='border: 1px solid #ccc; padding: 10px; background: #f9f9f9; max-height: 400px; overflow-y: auto;'>";

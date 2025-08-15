@@ -14,11 +14,17 @@ class Controller
 
     public function render($view, $params = [])
     {
+        if (!isset(Application::$app)) {
+            throw new \Exception('Application not initialized. Use router to execute controllers.');
+        }
         return Application::$app->router->renderView($view, $params);
     }
 
     public function renderContent($content)
     {
+        if (!isset(Application::$app)) {
+            throw new \Exception('Application not initialized. Use router to execute controllers.');
+        }
         return Application::$app->router->renderContent($content);
     }
 
