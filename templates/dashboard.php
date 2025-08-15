@@ -133,10 +133,17 @@
     <div class="row">
         <div class="col-lg-6 mb-4">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-list"></i> Активные процессы
+                        <i class="fas fa-question-circle text-muted ms-1" 
+                           data-bs-toggle="tooltip" 
+                           data-bs-placement="top" 
+                           title="Топ-5 процессов по загрузке CPU. Полный список доступен в разделе 'Процессы'."></i>
                     </h5>
+                    <a href="/processes" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt"></i> Все процессы
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
