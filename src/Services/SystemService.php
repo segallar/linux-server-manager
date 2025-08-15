@@ -99,9 +99,19 @@ class SystemService
         // Получаем активные интерфейсы
         $interfaces = $this->getActiveInterfaces();
         
+        // Подсчитываем активные интерфейсы
+        $activeCount = 0;
+        foreach ($interfaces as $interface) {
+            if ($interface['status'] === 'up') {
+                $activeCount++;
+            }
+        }
+        
         return [
             'online' => $isOnline,
             'interfaces' => $interfaces,
+            'active_count' => $activeCount,
+            'total_count' => count($interfaces),
             'status' => $isOnline ? 'Онлайн' : 'Офлайн'
         ];
     }
@@ -249,16 +259,34 @@ class SystemService
 
     private function getActiveInterfaces(): array
     {
-        $output = shell_exec('ip link show 2>/dev/null');
+        $output = shell_exec('ip addr show 2>/dev/null');
         $lines = explode("\n", $output);
         
         $interfaces = [];
+        $currentInterface = null;
+        
         foreach ($lines as $line) {
+            // Ищем строку с интерфейсом
             if (preg_match('/^\d+:\s+(\w+):/', $line, $matches)) {
                 $name = $matches[1];
                 if ($name !== 'lo') { // Исключаем loopback
-                    $interfaces[] = $name;
+                    $currentInterface = $name;
+                    $interfaces[$name] = [
+                        'name' => $name,
+                        'ips' => [],
+                        'status' => 'down'
+                    ];
                 }
+            }
+            
+            // Ищем IP адреса для текущего интерфейса
+            if ($currentInterface && preg_match('/inet\s+([0-9.]+)/', $line, $matches)) {
+                $interfaces[$currentInterface]['ips'][] = $matches[1];
+            }
+            
+            // Определяем статус интерфейса
+            if ($currentInterface && strpos($line, 'state UP') !== false) {
+                $interfaces[$currentInterface]['status'] = 'up';
             }
         }
         
