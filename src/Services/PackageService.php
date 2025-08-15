@@ -9,14 +9,14 @@ class PackageService
      */
     public function getUpgradablePackages(): array
     {
-        // Временно возвращаем пустой массив для стабильности
-        return [];
+        // Проверяем, что команда apt доступна
+        if (!file_exists('/usr/bin/apt')) {
+            return [];
+        }
         
         // Добавляем таймаут для избежания зависания
         $output = shell_exec('timeout 10 apt list --upgradable 2>/dev/null');
         if (!$output) {
-            // Логируем ошибку для диагностики
-            error_log("PackageService: apt list --upgradable returned no output");
             return [];
         }
 
@@ -59,8 +59,10 @@ class PackageService
      */
     private function getInstalledPackagesCount(): int
     {
-        // Временно возвращаем 0 для стабильности
-        return 0;
+        // Проверяем, что команда dpkg доступна
+        if (!file_exists('/usr/bin/dpkg')) {
+            return 0;
+        }
         
         // Добавляем таймаут для избежания зависания
         $output = shell_exec('timeout 5 dpkg -l | grep "^ii" | wc -l 2>/dev/null');
@@ -72,8 +74,10 @@ class PackageService
      */
     private function getSecurityUpdatesCount(): int
     {
-        // Временно возвращаем 0 для стабильности
-        return 0;
+        // Проверяем, что команда apt доступна
+        if (!file_exists('/usr/bin/apt')) {
+            return 0;
+        }
         
         // Добавляем таймаут для избежания зависания
         $output = shell_exec('timeout 10 apt list --upgradable 2>/dev/null | grep -i security | wc -l 2>/dev/null');
@@ -142,6 +146,11 @@ class PackageService
      */
     public function updatePackageList(): array
     {
+        // Проверяем права sudo
+        if (!file_exists('/usr/bin/sudo')) {
+            return ['success' => false, 'message' => 'sudo не доступен'];
+        }
+        
         $output = shell_exec('timeout 30 sudo apt update 2>&1');
         $success = strpos($output, 'Reading package lists') !== false;
         
