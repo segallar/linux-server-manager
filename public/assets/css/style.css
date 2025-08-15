@@ -20,6 +20,7 @@ html, body {
     min-height: calc(100vh - 56px);
     box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
     background-color: #f8f9fa;
+    padding: 1rem 0;
 }
 
 .sidebar .nav-link {
@@ -58,7 +59,7 @@ html, body {
 
 /* Основной контент */
 .main-content {
-    padding: 0;
+    padding: 1rem;
     margin: 0;
 }
 
