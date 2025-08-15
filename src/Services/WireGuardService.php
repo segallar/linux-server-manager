@@ -7,33 +7,33 @@ class WireGuardService
     private string $wgPath = '/usr/bin/wg';
     private string $wgQuickPath = '/usr/bin/wg-quick';
 
-    /**
+        /**
      * Получить список всех WireGuard интерфейсов
      */
     public function getInterfaces(): array
     {
         $interfaces = [];
-        
-        // Получаем список интерфейсов
-        $output = shell_exec($this->wgPath . ' show interfaces 2>&1');
-        
+
+        // Получаем список интерфейсов с sudo
+        $output = shell_exec('sudo ' . $this->wgPath . ' show interfaces 2>&1');
+
         // Логируем для отладки
         error_log("WireGuard: wg show interfaces output: " . ($output ?: 'NULL'));
-        
+
         if (!$output) {
             error_log("WireGuard: No interfaces found or command failed");
             return $interfaces;
         }
 
         $interfaceNames = array_filter(explode("\n", trim($output)));
-        
+
         foreach ($interfaceNames as $interfaceName) {
             $interfaceName = trim($interfaceName);
             if (empty($interfaceName)) continue;
-            
+
             $interfaces[] = $this->getInterfaceInfo($interfaceName);
         }
-        
+
         return $interfaces;
     }
 
@@ -60,8 +60,8 @@ class WireGuardService
         $status = shell_exec("ip link show $interfaceName 2>/dev/null");
         $info['status'] = $status ? 'up' : 'down';
 
-        // Получаем детальную информацию
-        $output = shell_exec($this->wgPath . " show $interfaceName 2>/dev/null");
+        // Получаем детальную информацию с sudo
+        $output = shell_exec('sudo ' . $this->wgPath . " show $interfaceName 2>/dev/null");
         if (!$output) {
             return $info;
         }
