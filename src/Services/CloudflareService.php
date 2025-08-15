@@ -34,8 +34,11 @@ class CloudflareService
         // Получаем список туннелей
         $output = shell_exec('cloudflared tunnel list 2>/dev/null');
         if (!$output) {
+            error_log("Cloudflare: No output from cloudflared tunnel list");
             return $tunnels;
         }
+
+        error_log("Cloudflare: Raw output: " . $output);
 
         $lines = explode("\n", trim($output));
         
@@ -49,17 +52,21 @@ class CloudflareService
             // Ищем строку с заголовками
             if (strpos($line, 'ID') !== false && strpos($line, 'NAME') !== false) {
                 $headerFound = true;
+                error_log("Cloudflare: Header found: " . $line);
                 continue;
             }
 
             if ($headerFound) {
+                error_log("Cloudflare: Processing line: " . $line);
                 $tunnel = $this->parseTunnelLine($line);
                 if ($tunnel) {
+                    error_log("Cloudflare: Parsed tunnel: " . json_encode($tunnel));
                     $tunnels[] = $tunnel;
                 }
             }
         }
 
+        error_log("Cloudflare: Total tunnels found: " . count($tunnels));
         return $tunnels;
     }
 
@@ -68,17 +75,29 @@ class CloudflareService
      */
     private function parseTunnelLine(string $line): ?array
     {
-        // Пример строки: "12345678-1234-1234-1234-123456789012 test-tunnel active 2024-01-15T10:30:45Z"
+        // Пример строки: "a12b3b7a-c9f3-49df-b9d7-22d4f8daa46e cftun 2025-07-15T15:47:59Z 1xams01, 1xams07, 1xams08, 1xams20"
+        // Формат: ID NAME CREATED CONNECTIONS
         $parts = preg_split('/\s+/', $line);
         
-        if (count($parts) < 4) {
+        if (count($parts) < 3) {
+            error_log("Cloudflare: Invalid line format: " . $line);
             return null;
         }
 
         $id = $parts[0];
         $name = $parts[1];
-        $status = $parts[2];
-        $created = $parts[3];
+        $created = $parts[2];
+        
+        // Определяем статус на основе наличия соединений
+        $status = 'inactive';
+        if (count($parts) > 3) {
+            $connections = $parts[3];
+            if (!empty($connections) && $connections !== '0') {
+                $status = 'active';
+            }
+        }
+
+        error_log("Cloudflare: Parsed - ID: $id, Name: $name, Created: $created, Status: $status");
 
         return [
             'id' => $id,
@@ -113,6 +132,33 @@ class CloudflareService
                     'id' => $matches[1],
                     'status' => 'active'
                 ];
+            }
+        }
+
+        // Если не нашли через tunnel info, попробуем из списка туннелей
+        if (empty($connections)) {
+            $listOutput = shell_exec('cloudflared tunnel list 2>/dev/null');
+            if ($listOutput) {
+                $lines = explode("\n", $listOutput);
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (strpos($line, $tunnelId) !== false) {
+                        // Ищем соединения в строке
+                        if (preg_match('/\s+([a-z0-9,]+)$/', $line, $matches)) {
+                            $connectionList = $matches[1];
+                            $connectionIds = array_map('trim', explode(',', $connectionList));
+                            foreach ($connectionIds as $connId) {
+                                if (!empty($connId) && $connId !== '0') {
+                                    $connections[] = [
+                                        'id' => $connId,
+                                        'status' => 'active'
+                                    ];
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
             }
         }
 
