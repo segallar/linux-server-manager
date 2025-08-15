@@ -52,18 +52,18 @@
 
 /* Основной контент */
 .main-content {
-    padding-top: 4rem; /* Уменьшаем отступ */
-    margin-top: 0.5rem;
+    padding-top: 2.5rem; /* Минимальный отступ */
+    margin-top: 0.25rem;
 }
 
 /* Дополнительный отступ для body */
 body {
-    padding-top: 50px; /* Уменьшаем отступ для body */
+    padding-top: 40px; /* Минимальный отступ для body */
 }
 
 /* Отступ для контейнера */
 .container-fluid {
-    padding-top: 0.5rem;
+    padding-top: 0.25rem;
 }
 
 /* Карточки статистики */
