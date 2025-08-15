@@ -52,23 +52,37 @@ echo "<h3>ip link show | grep wg:</h3>";
 $output = shell_exec('ip link show | grep wg 2>&1');
 echo "<pre>" . htmlspecialchars($output ?: 'Нет вывода') . "</pre>";
 
+echo "<h3>wg show:</h3>";
+$output = shell_exec('/usr/bin/wg show 2>&1');
+echo "<pre>" . htmlspecialchars($output ?: 'Нет вывода') . "</pre>";
+
+echo "<h3>wg show wg0:</h3>";
+$output = shell_exec('/usr/bin/wg show wg0 2>&1');
+echo "<pre>" . htmlspecialchars($output ?: 'Нет вывода') . "</pre>";
+
 // Проверка 3: Конфигурационные файлы
 echo "</div><div class='section'>
     <h2>3. Конфигурационные файлы</h2>";
 
 $configDir = '/etc/wireguard/';
 if (is_dir($configDir)) {
-    $files = scandir($configDir);
+    $files = @scandir($configDir);
     echo "<p><strong>Папка:</strong> $configDir</p>";
     echo "<p><strong>Файлы:</strong></p>";
-    if (count($files) <= 2) {
+    
+    if ($files === false) {
+        echo "<p class='warning'>Нет доступа к папке (требуются права root)</p>";
+        echo "<p>Проверим через команду:</p>";
+        $output = shell_exec('sudo ls -la /etc/wireguard/ 2>&1');
+        echo "<pre>" . htmlspecialchars($output ?: 'Нет вывода') . "</pre>";
+    } elseif (count($files) <= 2) {
         echo "<p class='warning'>Папка пустая</p>";
     } else {
         echo "<ul>";
         foreach ($files as $file) {
             if ($file !== '.' && $file !== '..') {
                 $fullPath = $configDir . $file;
-                $size = filesize($fullPath);
+                $size = @filesize($fullPath);
                 echo "<li>$file ($size байт)</li>";
             }
         }
