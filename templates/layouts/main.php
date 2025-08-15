@@ -77,25 +77,25 @@
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link <?= $currentPage === 'dashboard' ? 'active' : '' ?>" href="/">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'dashboard' ? 'active' : '' ?>" href="/">
                                 <i class="fas fa-tachometer-alt"></i>
                                 Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?= $currentPage === 'system' ? 'active' : '' ?>" href="/system">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'system' ? 'active' : '' ?>" href="/system">
                                 <i class="fas fa-server"></i>
                                 Системная информация
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?= $currentPage === 'processes' ? 'active' : '' ?>" href="/processes">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'processes' ? 'active' : '' ?>" href="/processes">
                                 <i class="fas fa-tasks"></i>
                                 Управление процессами
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?= $currentPage === 'services' ? 'active' : '' ?>" href="/services">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'services' ? 'active' : '' ?>" href="/services">
                                 <i class="fas fa-cogs"></i>
                                 Управление сервисами
                             </a>
@@ -120,7 +120,7 @@
             <!-- Основной контент -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <div class="pt-3 pb-2 mb-3">
-                    <?= $content ?>
+                    <?= $content ?? '' ?>
                 </div>
             </main>
         </div>

@@ -31,7 +31,7 @@ class Router
         $callback = $this->routes[$method][$path] ?? false;
 
         if (!$callback) {
-            throw new \Exception("Route not found: $method $path");
+            return $this->renderError("Маршрут не найден: $method $path", 404);
         }
 
         if (is_string($callback)) {
@@ -59,6 +59,16 @@ class Router
     {
         $layoutContent = $this->layoutContent();
         return str_replace('{{content}}', $viewContent, $layoutContent);
+    }
+
+    public function renderError($message, $code = 500)
+    {
+        $errorContent = $this->renderOnlyView('_error', [
+            'message' => $message,
+            'code' => $code
+        ]);
+        
+        return $this->renderContent($errorContent);
     }
 
     protected function layoutContent()
