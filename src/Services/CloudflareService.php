@@ -21,6 +21,18 @@ class CloudflareService
     }
 
     /**
+     * Проверить, авторизован ли cloudflared
+     */
+    public function isAuthenticated(): bool
+    {
+        $cloudflaredPath = $this->getCloudflaredPath();
+        $output = shell_exec("$cloudflaredPath tunnel list 2>&1");
+        
+        // Если нет ошибки с сертификатом, значит авторизован
+        return strpos($output, 'originCertPath=') === false && strpos($output, 'Cannot determine default origin certificate path') === false;
+    }
+
+    /**
      * Получить путь к cloudflared
      */
     private function getCloudflaredPath(): string
@@ -45,6 +57,11 @@ class CloudflareService
         $tunnels = [];
 
         if (!$this->isInstalled()) {
+            return $tunnels;
+        }
+
+        if (!$this->isAuthenticated()) {
+            error_log("Cloudflare: Not authenticated - need to run cloudflared tunnel login");
             return $tunnels;
         }
 

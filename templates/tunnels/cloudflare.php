@@ -10,6 +10,11 @@
         </div>
     </div>
 
+    <?php 
+    $cloudflareService = new \App\Services\CloudflareService();
+    $isAuthenticated = $cloudflareService->isAuthenticated();
+    ?>
+    
     <?php if (!$isInstalled): ?>
     <!-- Предупреждение об отсутствии cloudflared -->
     <div class="alert alert-warning" role="alert">
@@ -20,6 +25,17 @@
             <code>curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared</code><br>
             <code>chmod +x cloudflared</code><br>
             <code>sudo mv cloudflared /usr/local/bin/</code>
+        </p>
+    </div>
+    <?php elseif (!$isAuthenticated): ?>
+    <!-- Предупреждение о необходимости авторизации -->
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-key"></i> Требуется авторизация в Cloudflare</h4>
+        <p>cloudflared установлен, но не авторизован в Cloudflare. Для использования туннелей выполните авторизацию:</p>
+        <hr>
+        <p class="mb-0">
+            <code>cloudflared tunnel login</code><br>
+            <small class="text-muted">Эта команда откроет браузер для авторизации в Cloudflare</small>
         </p>
     </div>
     <?php else: ?>
