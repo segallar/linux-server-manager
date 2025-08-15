@@ -181,9 +181,12 @@ if (!file_exists($wgPath)) {
     echo "<pre>sudo apt update && sudo apt install wireguard</pre>";
 }
 
-if (is_dir($configDir) && count(scandir($configDir)) <= 2) {
-    echo "<p class='warning'>2. Создайте тестовый интерфейс:</p>";
-    echo "<pre>sudo wg genkey | sudo tee /etc/wireguard/wg0.key
+$configDir = '/etc/wireguard/';
+if (is_dir($configDir)) {
+    $files = @scandir($configDir);
+    if ($files === false || count($files) <= 2) {
+        echo "<p class='warning'>2. Создайте тестовый интерфейс:</p>";
+        echo "<pre>sudo wg genkey | sudo tee /etc/wireguard/wg0.key
 sudo wg pubkey < /etc/wireguard/wg0.key | sudo tee /etc/wireguard/wg0.pub
 sudo tee /etc/wireguard/wg0.conf > /dev/null <<EOF
 [Interface]
@@ -192,6 +195,7 @@ Address = 10.9.0.1/24
 ListenPort = 51820
 EOF
 sudo wg-quick up wg0</pre>";
+    }
 }
 
 echo "<p>3. После установки и настройки обновите эту страницу</p>";
