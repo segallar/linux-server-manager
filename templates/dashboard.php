@@ -123,6 +123,11 @@
                                 <i class="fas fa-network-wired"></i> Сеть
                             </button>
                         </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-warning w-100" onclick="location.href='/packages'">
+                                <i class="fas fa-box"></i> Пакеты
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

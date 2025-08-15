@@ -52,6 +52,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'packages' ? 'active' : '' ?>" href="/packages">
+                                <i class="fas fa-box"></i>
+                                Управление пакетами
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#networkSubmenu">
                                 <i class="fas fa-network-wired"></i>
                                 <span>Сеть</span>

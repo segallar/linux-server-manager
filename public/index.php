@@ -7,6 +7,7 @@ use App\Controllers\SystemController;
 use App\Controllers\ProcessController;
 use App\Controllers\ServiceController;
 use App\Controllers\NetworkController;
+use App\Controllers\PackageController;
 
 // Загружаем переменные окружения
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
@@ -20,6 +21,7 @@ $app->router->get('/', [DashboardController::class, 'index']);
 $app->router->get('/system', [SystemController::class, 'index']);
 $app->router->get('/processes', [ProcessController::class, 'index']);
 $app->router->get('/services', [ServiceController::class, 'index']);
+$app->router->get('/packages', [PackageController::class, 'index']);
 
 // Маршруты для сети
 $app->router->get('/network/ssh', [NetworkController::class, 'ssh']);
@@ -34,6 +36,14 @@ $app->router->post('/api/services/stop', [ServiceController::class, 'stop']);
 $app->router->post('/api/services/restart', [ServiceController::class, 'restart']);
 $app->router->post('/api/services/enable', [ServiceController::class, 'enable']);
 $app->router->post('/api/services/disable', [ServiceController::class, 'disable']);
+
+// API маршруты для управления пакетами
+$app->router->post('/api/packages/update', [PackageController::class, 'update']);
+$app->router->post('/api/packages/upgrade-all', [PackageController::class, 'upgradeAll']);
+$app->router->post('/api/packages/upgrade', [PackageController::class, 'upgradePackage']);
+$app->router->post('/api/packages/clean-cache', [PackageController::class, 'cleanCache']);
+$app->router->post('/api/packages/autoremove', [PackageController::class, 'autoremove']);
+$app->router->get('/api/packages/info', [PackageController::class, 'getPackageInfo']);
 
 // Запускаем приложение
 $app->run();
