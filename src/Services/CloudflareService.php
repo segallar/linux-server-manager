@@ -251,6 +251,10 @@ class CloudflareService
         foreach ($lines as $line) {
             $line = trim($line);
             if (empty($line) || strpos($line, 'IP') !== false) continue;
+            
+            // Пропускаем сообщения об отсутствии маршрутов
+            if (strpos($line, 'No routes were found') !== false) continue;
+            if (strpos($line, 'You can use') !== false) continue;
 
             $routes[] = $line;
         }
