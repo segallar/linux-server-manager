@@ -52,13 +52,18 @@
 
 /* Основной контент */
 .main-content {
-    padding-top: 5rem; /* Увеличиваем отступ для фиксированной навигации */
-    margin-top: 1rem;
+    padding-top: 8rem; /* Увеличиваем отступ еще больше */
+    margin-top: 2rem;
 }
 
 /* Дополнительный отступ для body */
 body {
-    padding-top: 56px; /* Высота навигационной панели */
+    padding-top: 80px; /* Увеличиваем отступ для body */
+}
+
+/* Отступ для контейнера */
+.container-fluid {
+    padding-top: 2rem;
 }
 
 /* Карточки статистики */
