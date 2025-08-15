@@ -53,7 +53,8 @@ class CloudflareService
         $isAuth = strpos($output, 'originCertPath=') === false && strpos($output, 'Cannot determine default origin certificate path') === false;
         
         error_log("Cloudflare: Authentication check result: " . ($isAuth ? 'AUTHENTICATED' : 'NOT_AUTHENTICATED'));
-        error_log("Cloudflare: Command output: " . $output);
+        // Убираем логирование большого вывода
+        // error_log("Cloudflare: Command output: " . $output);
         
         return $isAuth;
     }
@@ -101,7 +102,8 @@ class CloudflareService
             return $tunnels;
         }
 
-        error_log("Cloudflare: Raw output: " . $output);
+        // Убираем логирование большого вывода
+        // error_log("Cloudflare: Raw output: " . $output);
 
         $lines = explode("\n", trim($output));
         
@@ -123,7 +125,8 @@ class CloudflareService
                 error_log("Cloudflare: Processing line: " . $line);
                 $tunnel = $this->parseTunnelLine($line);
                 if ($tunnel) {
-                    error_log("Cloudflare: Parsed tunnel: " . json_encode($tunnel));
+                    // Убираем логирование большого вывода
+                // error_log("Cloudflare: Parsed tunnel: " . json_encode($tunnel));
                     $tunnels[] = $tunnel;
                 }
             }
