@@ -25,7 +25,7 @@
         <div class="row">
             <!-- Боковое меню -->
             <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
-                <div class="position-sticky pt-3">
+                <div class="position-sticky">
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link <?= ($currentPage ?? '') === 'dashboard' ? 'active' : '' ?>" href="/">
@@ -70,7 +70,7 @@
 
             <!-- Основной контент -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-                <div class="pt-3 pb-2 mb-3">
+                <div class="pb-2 mb-3">
                     <?= $content ?? '' ?>
                 </div>
             </main>
