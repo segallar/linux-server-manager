@@ -1,6 +1,11 @@
-# Linux Server Manager
+# 🐧 Linux Server Manager
 
-Современное веб-приложение для управления Linux сервером с красивым интерфейсом и функциональным меню.
+[![GitHub release](https://img.shields.io/github/v/release/segallar/linux-server-manager)](https://github.com/segallar/linux-server-manager/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PHP Version](https://img.shields.io/badge/PHP-8.0+-blue.svg)](https://php.net)
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com)
+
+**Современное веб-приложение для управления Linux сервером с красивым интерфейсом и функциональным меню.**
 
 ## Особенности
 
