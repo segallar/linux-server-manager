@@ -281,7 +281,7 @@ class CloudflareService
     /**
      * Запустить туннель
      */
-    public function runTunnel(string $tunnelId, string $configPath = null): array
+    public function runTunnel(string $tunnelId, ?string $configPath = null): array
     {
         if (!$this->isInstalled()) {
             return ['success' => false, 'error' => 'cloudflared не установлен'];

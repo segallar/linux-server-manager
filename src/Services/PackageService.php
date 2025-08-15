@@ -9,11 +9,11 @@ class PackageService
      */
     public function getUpgradablePackages(): array
     {
-        // Временно отключаем для диагностики
-        return [];
-        
-        $output = shell_exec('apt list --upgradable 2>/dev/null');
+        // Добавляем таймаут для избежания зависания
+        $output = shell_exec('timeout 10 apt list --upgradable 2>/dev/null');
         if (!$output) {
+            // Логируем ошибку для диагностики
+            error_log("PackageService: apt list --upgradable returned no output");
             return [];
         }
 
@@ -56,10 +56,8 @@ class PackageService
      */
     private function getInstalledPackagesCount(): int
     {
-        // Временно отключаем для диагностики
-        return 0;
-        
-        $output = shell_exec('dpkg -l | grep "^ii" | wc -l 2>/dev/null');
+        // Добавляем таймаут для избежания зависания
+        $output = shell_exec('timeout 5 dpkg -l | grep "^ii" | wc -l 2>/dev/null');
         return (int)trim($output ?: '0');
     }
 
@@ -68,10 +66,8 @@ class PackageService
      */
     private function getSecurityUpdatesCount(): int
     {
-        // Временно отключаем для диагностики
-        return 0;
-        
-        $output = shell_exec('apt list --upgradable 2>/dev/null | grep -i security | wc -l 2>/dev/null');
+        // Добавляем таймаут для избежания зависания
+        $output = shell_exec('timeout 10 apt list --upgradable 2>/dev/null | grep -i security | wc -l 2>/dev/null');
         return (int)trim($output ?: '0');
     }
 
@@ -137,7 +133,7 @@ class PackageService
      */
     public function updatePackageList(): array
     {
-        $output = shell_exec('sudo apt update 2>&1');
+        $output = shell_exec('timeout 30 sudo apt update 2>&1');
         $success = strpos($output, 'Reading package lists') !== false;
         
         return [
@@ -151,7 +147,7 @@ class PackageService
      */
     public function upgradeAllPackages(): array
     {
-        $output = shell_exec('sudo apt upgrade -y 2>&1');
+        $output = shell_exec('timeout 300 sudo apt upgrade -y 2>&1'); // 5 минут для обновления
         $success = strpos($output, 'upgraded') !== false || strpos($output, '0 upgraded') !== false;
         
         return [
@@ -165,7 +161,7 @@ class PackageService
      */
     public function upgradePackage(string $packageName): array
     {
-        $output = shell_exec("sudo apt install $packageName -y 2>&1");
+        $output = shell_exec("timeout 60 sudo apt install $packageName -y 2>&1");
         $success = strpos($output, 'upgraded') !== false || strpos($output, 'already the newest version') !== false;
         
         return [
