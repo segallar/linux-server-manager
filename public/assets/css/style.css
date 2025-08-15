@@ -1,5 +1,11 @@
 /* Основные стили для Linux Server Manager */
 
+/* Сброс всех отступов */
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
 /* Навигационная панель */
 .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -52,8 +58,18 @@
 
 /* Основной контент */
 .main-content {
-    padding-top: 0;
-    margin-top: 0;
+    padding: 0;
+    margin: 0;
+}
+
+/* Убираем отступы из контейнера */
+.container-fluid {
+    padding: 0;
+    margin: 0;
+}
+
+.row {
+    margin: 0;
 }
 
 /* Карточки статистики */
