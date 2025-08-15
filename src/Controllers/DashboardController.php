@@ -2,16 +2,15 @@
 
 namespace App\Controllers;
 
-class DashboardController
+use App\Core\Controller;
+
+class DashboardController extends Controller
 {
     public function index()
     {
-        // Получаем содержимое шаблона
-        ob_start();
-        include __DIR__ . '/../../templates/dashboard.php';
-        $content = ob_get_clean();
-        
-        // Подключаем основной шаблон
-        include __DIR__ . '/../../templates/layout.php';
+        return $this->render('dashboard', [
+            'title' => 'Dashboard',
+            'currentPage' => 'dashboard'
+        ]);
     }
 }

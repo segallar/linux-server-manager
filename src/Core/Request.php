@@ -8,9 +8,11 @@ class Request
     {
         $path = $_SERVER['REQUEST_URI'] ?? '/';
         $position = strpos($path, '?');
+        
         if ($position === false) {
             return $path;
         }
+        
         return substr($path, 0, $position);
     }
 
@@ -46,5 +48,55 @@ class Request
         }
 
         return $data;
+    }
+
+    public function get($key, $default = null)
+    {
+        $body = $this->getBody();
+        return $body[$key] ?? $default;
+    }
+
+    public function post($key, $default = null)
+    {
+        if ($this->isPost()) {
+            return $_POST[$key] ?? $default;
+        }
+        return $default;
+    }
+
+    public function all()
+    {
+        return $this->getBody();
+    }
+
+    public function has($key)
+    {
+        $body = $this->getBody();
+        return isset($body[$key]);
+    }
+
+    public function only($keys)
+    {
+        $body = $this->getBody();
+        $result = [];
+        
+        foreach ($keys as $key) {
+            if (isset($body[$key])) {
+                $result[$key] = $body[$key];
+            }
+        }
+        
+        return $result;
+    }
+
+    public function except($keys)
+    {
+        $body = $this->getBody();
+        
+        foreach ($keys as $key) {
+            unset($body[$key]);
+        }
+        
+        return $body;
     }
 }
