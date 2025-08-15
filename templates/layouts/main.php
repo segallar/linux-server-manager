@@ -20,55 +20,6 @@
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-    <!-- Навигационная панель -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-server"></i> Linux Server Manager
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/system">
-                            <i class="fas fa-server"></i> Система
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/processes">
-                            <i class="fas fa-tasks"></i> Процессы
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/services">
-                            <i class="fas fa-cogs"></i> Сервисы
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-network-wired"></i> Туннели
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/tunnels/ssh">SSH туннели</a></li>
-                            <li><a class="dropdown-item" href="/tunnels/port-forwarding">Проброс портов</a></li>
-                            <li><a class="dropdown-item" href="/tunnels/wireguard">WireGuard</a></li>
-                            <li><a class="dropdown-item" href="/tunnels/cloudflare">Cloudflare</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
     <!-- Основной контент -->
     <div class="container-fluid">
         <div class="row">
