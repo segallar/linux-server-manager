@@ -12,7 +12,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
 // Создаем экземпляр приложения
-$app = new Application();
+$app = new Application(__DIR__ . '/..');
 
 // Регистрируем маршруты
 $app->router->get('/', [DashboardController::class, 'index']);
