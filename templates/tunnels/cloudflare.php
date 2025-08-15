@@ -34,6 +34,14 @@
         <p>cloudflared установлен, но не авторизован в Cloudflare. Для использования туннелей выполните авторизацию:</p>
         <hr>
         <p class="mb-0">
+            <strong>Если вы уже авторизованы как root:</strong><br>
+            <code>sudo cp /root/.cloudflared/cert.pem /etc/cloudflared/cert.pem</code><br>
+            <code>sudo chown www-data:www-data /etc/cloudflared/cert.pem</code><br>
+            <small class="text-muted">Это скопирует сертификат в место, доступное для веб-сервера</small>
+        </p>
+        <hr>
+        <p class="mb-0">
+            <strong>Если нужно авторизоваться заново:</strong><br>
             <code>cloudflared tunnel login</code><br>
             <small class="text-muted">Эта команда откроет браузер для авторизации в Cloudflare</small>
         </p>

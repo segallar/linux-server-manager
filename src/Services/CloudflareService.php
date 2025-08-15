@@ -25,11 +25,37 @@ class CloudflareService
      */
     public function isAuthenticated(): bool
     {
+        // Проверяем наличие сертификата в разных местах
+        $certPaths = [
+            '/root/.cloudflared/cert.pem',
+            '/home/www-data/.cloudflared/cert.pem',
+            '/var/www/.cloudflared/cert.pem',
+            '/etc/cloudflared/cert.pem'
+        ];
+        
+        $certExists = false;
+        foreach ($certPaths as $path) {
+            if (file_exists($path)) {
+                $certExists = true;
+                break;
+            }
+        }
+        
+        if (!$certExists) {
+            error_log("Cloudflare: No certificate found in any location");
+            return false;
+        }
+        
         $cloudflaredPath = $this->getCloudflaredPath();
         $output = shell_exec("$cloudflaredPath tunnel list 2>&1");
         
         // Если нет ошибки с сертификатом, значит авторизован
-        return strpos($output, 'originCertPath=') === false && strpos($output, 'Cannot determine default origin certificate path') === false;
+        $isAuth = strpos($output, 'originCertPath=') === false && strpos($output, 'Cannot determine default origin certificate path') === false;
+        
+        error_log("Cloudflare: Authentication check result: " . ($isAuth ? 'AUTHENTICATED' : 'NOT_AUTHENTICATED'));
+        error_log("Cloudflare: Command output: " . $output);
+        
+        return $isAuth;
     }
 
     /**
