@@ -149,7 +149,8 @@
                             <th class="sortable" data-sort="user">Пользователь <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-sort="cpu">CPU % <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-sort="mem">RAM % <i class="fas fa-sort"></i></th>
-                            <th>Используемая память</th>
+                            <th class="sortable" data-sort="rss">Физическая память <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="vsz">Виртуальная память <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-sort="status">Статус <i class="fas fa-sort"></i></th>
                             <th class="sortable" data-sort="time">Время <i class="fas fa-sort"></i></th>
                             <th>Действия</th>
@@ -165,14 +166,12 @@
                                 data-status="<?= htmlspecialchars($process['status']) ?>"
                                 data-cpu="<?= (float)$process['cpu'] ?>"
                                 data-mem="<?= (float)$process['mem'] ?>"
+                                data-rss="<?= htmlspecialchars($process['rss']) ?>"
+                                data-vsz="<?= htmlspecialchars($process['vsz']) ?>"
                                 data-time="<?= htmlspecialchars($process['time']) ?>">
                                 <td><strong><?= htmlspecialchars($process['pid']) ?></strong></td>
                                 <td>
-                                    <div>
-                                        <strong><?= htmlspecialchars(substr($process['command'], 0, 25)) ?><?= strlen($process['command']) > 25 ? '...' : '' ?></strong>
-                                        <br>
-                                        <small class="text-muted"><?= htmlspecialchars($process['vsz']) ?></small>
-                                    </div>
+                                    <strong><?= htmlspecialchars(substr($process['command'], 0, 25)) ?><?= strlen($process['command']) > 25 ? '...' : '' ?></strong>
                                 </td>
                                 <td><?= htmlspecialchars($process['user']) ?></td>
                                 <td>
@@ -185,13 +184,8 @@
                                         <?= htmlspecialchars($process['mem']) ?>%
                                     </span>
                                 </td>
-                                <td>
-                                    <div>
-                                        <strong><?= htmlspecialchars($process['rss']) ?></strong>
-                                        <br>
-                                        <small class="text-muted">Физическая память</small>
-                                    </div>
-                                </td>
+                                <td><?= htmlspecialchars($process['rss']) ?></td>
+                                <td><?= htmlspecialchars($process['vsz']) ?></td>
                                 <td>
                                     <?php
                                     $statusClass = 'bg-secondary';
@@ -238,7 +232,7 @@
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="9" class="text-center">Нет данных о процессах</td>
+                                <td colspan="10" class="text-center">Нет данных о процессах</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -477,6 +471,14 @@ function sortProcesses() {
                 aVal = parseFloat($a.data('mem'));
                 bVal = parseFloat($b.data('mem'));
                 break;
+            case 'rss':
+                aVal = parseMemorySize($a.data('rss'));
+                bVal = parseMemorySize($b.data('rss'));
+                break;
+            case 'vsz':
+                aVal = parseMemorySize($a.data('vsz'));
+                bVal = parseMemorySize($b.data('vsz'));
+                break;
             case 'command':
                 aVal = $a.data('command');
                 bVal = $b.data('command');
@@ -503,6 +505,24 @@ function sortProcesses() {
     });
     
     $tbody.append($rows);
+}
+
+function parseMemorySize(memoryString) {
+    // Парсим строки вида "128.5 KB", "2.1 MB", "1.0 GB"
+    const match = memoryString.match(/^([\d.]+)\s*([KMGT]?B)$/i);
+    if (!match) return 0;
+    
+    const value = parseFloat(match[1]);
+    const unit = match[2].toUpperCase();
+    
+    switch (unit) {
+        case 'B': return value;
+        case 'KB': return value * 1024;
+        case 'MB': return value * 1024 * 1024;
+        case 'GB': return value * 1024 * 1024 * 1024;
+        case 'TB': return value * 1024 * 1024 * 1024 * 1024;
+        default: return value;
+    }
 }
 
 function showProcessInfo(pid) {
