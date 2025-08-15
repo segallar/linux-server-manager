@@ -50,15 +50,17 @@ class Router
 
     public function renderView($view, $params = [])
     {
-        $layoutContent = $this->layoutContent();
         $viewContent = $this->renderOnlyView($view, $params);
-        return str_replace('<?= $content ?? \'\' ?>', $viewContent, $layoutContent);
+        return $this->renderContent($viewContent);
     }
 
     public function renderContent($viewContent)
     {
-        $layoutContent = $this->layoutContent();
-        return str_replace('<?= $content ?? \'\' ?>', $viewContent, $layoutContent);
+        $layout = Application::$app->controller->layout ?? 'main';
+        ob_start();
+        $content = $viewContent;
+        include_once Application::$ROOT_DIR . "/templates/layouts/$layout.php";
+        return ob_get_clean();
     }
 
     public function renderError($message, $code = 500)
@@ -71,13 +73,7 @@ class Router
         return $this->renderContent($errorContent);
     }
 
-    protected function layoutContent()
-    {
-        $layout = Application::$app->controller->layout ?? 'main';
-        ob_start();
-        include_once Application::$ROOT_DIR . "/templates/layouts/$layout.php";
-        return ob_get_clean();
-    }
+
 
     protected function renderOnlyView($view, $params)
     {
