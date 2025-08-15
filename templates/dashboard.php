@@ -20,7 +20,8 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">CPU</h6>
-                            <h3 class="mb-0" id="cpu-usage">0%</h3>
+                            <h3 class="mb-0"><?= $stats['cpu']['usage'] ?>%</h3>
+                            <small><?= $stats['cpu']['cores'] ?> ядер</small>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-microchip fa-2x"></i>
@@ -35,7 +36,8 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">RAM</h6>
-                            <h3 class="mb-0" id="ram-usage">0%</h3>
+                            <h3 class="mb-0"><?= $stats['memory']['usage_percent'] ?>%</h3>
+                            <small><?= $stats['memory']['used'] ?> / <?= $stats['memory']['total'] ?></small>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-memory fa-2x"></i>
@@ -50,7 +52,8 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Диск</h6>
-                            <h3 class="mb-0" id="disk-usage">0%</h3>
+                            <h3 class="mb-0"><?= $stats['disk']['usage_percent'] ?>%</h3>
+                            <small><?= $stats['disk']['used'] ?> / <?= $stats['disk']['total'] ?></small>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-hdd fa-2x"></i>
@@ -65,7 +68,8 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Сеть</h6>
-                            <h3 class="mb-0" id="network-status">Онлайн</h3>
+                            <h3 class="mb-0"><?= $stats['network']['status'] ?></h3>
+                            <small><?= count($stats['network']['interfaces']) ?> интерфейсов</small>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-network-wired fa-2x"></i>
@@ -133,10 +137,23 @@
                                     <th>RAM</th>
                                 </tr>
                             </thead>
-                            <tbody id="processes-table">
-                                <tr>
-                                    <td colspan="4" class="text-center">Загрузка...</td>
-                                </tr>
+                            <tbody>
+                                <?php if (!empty($stats['processes'])): ?>
+                                    <?php foreach ($stats['processes'] as $process): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($process['pid']) ?></td>
+                                        <td>
+                                            <small><?= htmlspecialchars(substr($process['command'], 0, 30)) ?><?= strlen($process['command']) > 30 ? '...' : '' ?></small>
+                                        </td>
+                                        <td><?= htmlspecialchars($process['cpu']) ?>%</td>
+                                        <td><?= htmlspecialchars($process['mem']) ?>%</td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center">Нет данных</td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -155,16 +172,30 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6">
-                            <p><strong>ОС:</strong> <span id="os-info">Загрузка...</span></p>
-                            <p><strong>Ядро:</strong> <span id="kernel-info">Загрузка...</span></p>
-                            <p><strong>Время работы:</strong> <span id="uptime-info">Загрузка...</span></p>
+                            <p><strong>ОС:</strong> <?= htmlspecialchars($stats['system']['os']) ?></p>
+                            <p><strong>Ядро:</strong> <?= htmlspecialchars($stats['system']['kernel']) ?></p>
+                            <p><strong>Время работы:</strong> <?= htmlspecialchars($stats['system']['uptime']) ?></p>
+                            <p><strong>Хост:</strong> <?= htmlspecialchars($stats['system']['hostname']) ?></p>
                         </div>
                         <div class="col-6">
-                            <p><strong>Загрузка:</strong> <span id="load-info">Загрузка...</span></p>
-                            <p><strong>Пользователи:</strong> <span id="users-info">Загрузка...</span></p>
-                            <p><strong>Дата:</strong> <span id="date-info">Загрузка...</span></p>
+                            <p><strong>Загрузка:</strong> <?= htmlspecialchars($stats['system']['load']) ?></p>
+                            <p><strong>Пользователи:</strong> <?= htmlspecialchars($stats['system']['users']) ?></p>
+                            <p><strong>Дата:</strong> <?= htmlspecialchars($stats['system']['date']) ?></p>
+                            <p><strong>CPU:</strong> <?= htmlspecialchars($stats['cpu']['model']) ?></p>
                         </div>
                     </div>
+                    
+                    <?php if (!empty($stats['network']['interfaces'])): ?>
+                    <hr>
+                    <h6><i class="fas fa-network-wired"></i> Сетевые интерфейсы:</h6>
+                    <div class="row">
+                        <?php foreach ($stats['network']['interfaces'] as $interface): ?>
+                        <div class="col-4 mb-2">
+                            <span class="badge bg-primary"><?= htmlspecialchars($interface) ?></span>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -173,50 +204,30 @@
 
 <script>
 $(document).ready(function() {
-    updateSystemInfo();
-    setInterval(updateSystemInfo, 5000);
+    // Автообновление каждые 30 секунд
+    setInterval(refreshStats, 30000);
 });
 
-function updateSystemInfo() {
-    // Здесь будет AJAX запрос для получения системной информации
-    // Пока используем заглушки
-    $('#cpu-usage').text('25%');
-    $('#ram-usage').text('45%');
-    $('#disk-usage').text('30%');
-    $('#network-status').text('Онлайн');
-    
-    $('#os-info').text('Linux Ubuntu 20.04');
-    $('#kernel-info').text('5.4.0-42-generic');
-    $('#uptime-info').text('2 дня, 15 часов');
-    $('#load-info').text('0.5, 0.3, 0.2');
-    $('#users-info').text('3 подключенных');
-    $('#date-info').text(new Date().toLocaleString());
-    
-    // Обновляем таблицу процессов
-    $('#processes-table').html(`
-        <tr>
-            <td>1</td>
-            <td>systemd</td>
-            <td>0.1%</td>
-            <td>0.2%</td>
-        </tr>
-        <tr>
-            <td>1234</td>
-            <td>nginx</td>
-            <td>2.3%</td>
-            <td>1.5%</td>
-        </tr>
-        <tr>
-            <td>5678</td>
-            <td>php-fpm</td>
-            <td>1.8%</td>
-            <td>2.1%</td>
-        </tr>
-    `);
+function refreshStats() {
+    // Перезагружаем страницу для получения свежих данных
+    location.reload();
 }
 
-function refreshStats() {
-    updateSystemInfo();
-    showAlert('Статистика обновлена', 'success');
+function showAlert(message, type = 'info') {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Добавляем уведомление в начало страницы
+    $('.container-fluid').prepend(alertHtml);
+    
+    // Автоматически скрываем через 3 секунды
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 3000);
 }
 </script>
+
