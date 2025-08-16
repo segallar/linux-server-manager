@@ -23,8 +23,13 @@ class PackageService
             return [];
         }
         
+        // Сначала проверяем, не заблокирован ли apt
+        if ($this->isAptLocked()) {
+            return [];
+        }
+        
         // Добавляем таймаут для избежания зависания
-        $output = shell_exec('timeout 15 apt list --upgradable 2>/dev/null');
+        $output = shell_exec('timeout 10 apt list --upgradable 2>/dev/null');
         if (!$output) {
             return [];
         }
@@ -59,6 +64,7 @@ class PackageService
             return $cached;
         }
 
+        // Используем безопасные методы
         $upgradable = $this->getUpgradablePackages();
         $installed = $this->getInstalledPackagesCount();
         $security = $this->getSecurityUpdatesCount();
@@ -86,7 +92,7 @@ class PackageService
         }
         
         // Добавляем таймаут для избежания зависания
-        $output = shell_exec('timeout 10 dpkg -l | grep "^ii" | wc -l 2>/dev/null');
+        $output = shell_exec('timeout 5 dpkg -l | grep "^ii" | wc -l 2>/dev/null');
         return (int)trim($output ?: '0');
     }
 
@@ -100,8 +106,13 @@ class PackageService
             return 0;
         }
         
+        // Проверяем, не заблокирован ли apt
+        if ($this->isAptLocked()) {
+            return 0;
+        }
+        
         // Добавляем таймаут для избежания зависания
-        $output = shell_exec('timeout 15 apt list --upgradable 2>/dev/null | grep -i security | wc -l 2>/dev/null');
+        $output = shell_exec('timeout 8 apt list --upgradable 2>/dev/null | grep -i security | wc -l 2>/dev/null');
         return (int)trim($output ?: '0');
     }
 
@@ -144,6 +155,26 @@ class PackageService
     }
 
     /**
+     * Проверить, заблокирован ли apt
+     */
+    private function isAptLocked(): bool
+    {
+        $lockFiles = [
+            '/var/lib/apt/lists/lock',
+            '/var/cache/apt/archives/lock',
+            '/var/lib/dpkg/lock*'
+        ];
+
+        foreach ($lockFiles as $lockFile) {
+            if (file_exists($lockFile)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Парсить строку пакета из apt list
      */
     private function parsePackageLine(string $line): ?array
@@ -172,6 +203,11 @@ class PackageService
             return ['success' => false, 'message' => 'sudo не доступен'];
         }
         
+        // Проверяем, не заблокирован ли apt
+        if ($this->isAptLocked()) {
+            return ['success' => false, 'message' => 'apt заблокирован другим процессом'];
+        }
+        
         // Очищаем кэш перед обновлением
         $this->clearCache();
         
@@ -194,10 +230,15 @@ class PackageService
             return ['success' => false, 'message' => 'sudo не доступен'];
         }
         
+        // Проверяем, не заблокирован ли apt
+        if ($this->isAptLocked()) {
+            return ['success' => false, 'message' => 'apt заблокирован другим процессом'];
+        }
+        
         // Очищаем кэш перед обновлением
         $this->clearCache();
         
-        $output = shell_exec('timeout 600 sudo apt upgrade -y 2>&1'); // 10 минут для обновления
+        $output = shell_exec('timeout 600 sudo apt upgrade -y 2>&1');
         $success = strpos($output, 'upgraded') !== false || strpos($output, '0 upgraded') !== false;
         
         return [
@@ -214,6 +255,11 @@ class PackageService
         // Проверяем права sudo
         if (!file_exists('/usr/bin/sudo')) {
             return ['success' => false, 'message' => 'sudo не доступен'];
+        }
+        
+        // Проверяем, не заблокирован ли apt
+        if ($this->isAptLocked()) {
+            return ['success' => false, 'message' => 'apt заблокирован другим процессом'];
         }
         
         // Очищаем кэш перед обновлением
@@ -238,6 +284,11 @@ class PackageService
             return ['success' => false, 'message' => 'sudo не доступен'];
         }
         
+        // Проверяем, не заблокирован ли apt
+        if ($this->isAptLocked()) {
+            return ['success' => false, 'message' => 'apt заблокирован другим процессом'];
+        }
+        
         // Очищаем кэш приложения
         $this->clearCache();
         
@@ -260,11 +311,16 @@ class PackageService
             return ['success' => false, 'message' => 'sudo не доступен'];
         }
         
+        // Проверяем, не заблокирован ли apt
+        if ($this->isAptLocked()) {
+            return ['success' => false, 'message' => 'apt заблокирован другим процессом'];
+        }
+        
         // Очищаем кэш приложения
         $this->clearCache();
         
         $output = shell_exec('timeout 120 sudo apt autoremove -y 2>&1');
-        $success = strpos($output, 'removed') !== false || strpos($output, '0 upgraded') !== false;
+        $success = strpos($output, 'removed') !== false || strpos($output, '0 to remove') !== false;
         
         return [
             'success' => $success,
