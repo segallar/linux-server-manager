@@ -8,6 +8,7 @@ class Application
     public Request $request;
     public Response $response;
     public string $rootPath;
+    public Cache $cache;
     private float $startTime;
 
     public function __construct(string $rootPath)
@@ -16,6 +17,7 @@ class Application
         $this->request = new Request();
         $this->response = new Response();
         $this->router = new Router($this->request, $this->response, $this->rootPath);
+        $this->cache = new Cache();
         
         // Засекаем время начала
         $this->startTime = microtime(true);

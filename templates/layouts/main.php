@@ -101,5 +101,6 @@
 
     <!-- Кастомные скрипты -->
     <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/smart-loading.js"></script>
 </body>
 </html>
