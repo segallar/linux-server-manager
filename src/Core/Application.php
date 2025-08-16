@@ -43,7 +43,8 @@ class Application
                 return;
             }
 
-            $this->router->resolve();
+            $result = $this->router->resolve();
+            echo $result;
         } catch (\Exception $e) {
             // Логируем ошибку
             error_log("Application error: " . $e->getMessage());
