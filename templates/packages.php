@@ -16,7 +16,12 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Управление пакетами</h1>
-                <div>
+                <div class="d-flex align-items-center">
+                    <?php if (isset($fromCache) && $fromCache): ?>
+                        <span class="badge bg-success me-2">
+                            <i class="fas fa-database"></i> Кэш
+                        </span>
+                    <?php endif; ?>
                     <button class="btn btn-success me-2" onclick="updatePackageList()">
                         <i class="fas fa-sync-alt"></i> Обновить список
                     </button>

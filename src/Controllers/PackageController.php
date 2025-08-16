@@ -9,37 +9,58 @@ class PackageController extends Controller
 {
     public function index()
     {
-        try {
-            $packageService = new PackageService();
-            
-            // Получаем данные с обработкой ошибок
-            $stats = $this->getPackageStatsSafely($packageService);
-            $upgradable = $this->getUpgradablePackagesSafely($packageService);
-            $unused = $this->getUnusedPackagesSafely($packageService);
-
-            return $this->render('packages', [
-                'title' => 'Управление пакетами',
-                'currentPage' => 'packages',
-                'stats' => $stats,
-                'upgradable' => $upgradable,
-                'unused' => $unused
-            ]);
-        } catch (\Exception $e) {
-            // В случае ошибки возвращаем пустые данные
-            return $this->render('packages', [
-                'title' => 'Управление пакетами',
-                'currentPage' => 'packages',
-                'stats' => [
+        global $app;
+        $cache = $app->cache;
+        
+        // Пытаемся получить данные из кэша
+        $cacheKey = 'packages_data';
+        $cachedData = $cache->get($cacheKey);
+        
+        if ($cachedData !== null) {
+            // Используем кэшированные данные
+            $stats = $cachedData['stats'];
+            $upgradable = $cachedData['upgradable'];
+            $unused = $cachedData['unused'];
+            $fromCache = true;
+        } else {
+            try {
+                $packageService = new PackageService();
+                
+                // Получаем данные с обработкой ошибок
+                $stats = $this->getPackageStatsSafely($packageService);
+                $upgradable = $this->getUpgradablePackagesSafely($packageService);
+                $unused = $this->getUnusedPackagesSafely($packageService);
+                
+                // Сохраняем в кэш на 3 минуты
+                $cache->set($cacheKey, [
+                    'stats' => $stats,
+                    'upgradable' => $upgradable,
+                    'unused' => $unused
+                ], 180);
+                
+                $fromCache = false;
+            } catch (\Exception $e) {
+                // В случае ошибки возвращаем пустые данные
+                $stats = [
                     'total_installed' => 0,
                     'upgradable' => 0,
                     'security_updates' => 0,
                     'last_update' => 'Неизвестно'
-                ],
-                'upgradable' => [],
-                'unused' => [],
-                'error' => 'Ошибка загрузки данных пакетов: ' . $e->getMessage()
-            ]);
+                ];
+                $upgradable = [];
+                $unused = [];
+                $fromCache = false;
+            }
         }
+
+        return $this->render('packages', [
+            'title' => 'Управление пакетами',
+            'currentPage' => 'packages',
+            'stats' => $stats,
+            'upgradable' => $upgradable,
+            'unused' => $unused,
+            'fromCache' => $fromCache
+        ]);
     }
 
     private function getPackageStatsSafely(PackageService $packageService): array

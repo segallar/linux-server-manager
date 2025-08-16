@@ -3,9 +3,16 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Управление сервисами</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newServiceModal">
-                    <i class="fas fa-plus"></i> Новый сервис
-                </button>
+                <div class="d-flex align-items-center">
+                    <?php if (isset($fromCache) && $fromCache): ?>
+                        <span class="badge bg-success me-2">
+                            <i class="fas fa-database"></i> Кэш
+                        </span>
+                    <?php endif; ?>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newServiceModal">
+                        <i class="fas fa-plus"></i> Новый сервис
+                    </button>
+                </div>
             </div>
         </div>
     </div>

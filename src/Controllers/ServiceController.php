@@ -9,15 +9,39 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        $serviceService = new ServiceService();
-        $stats = $serviceService->getStats();
-        $popularServices = $serviceService->getPopularServices();
+        global $app;
+        $cache = $app->cache;
+        
+        // Пытаемся получить данные из кэша
+        $cacheKey = 'services_data';
+        $cachedData = $cache->get($cacheKey);
+        
+        if ($cachedData !== null) {
+            // Используем кэшированные данные
+            $stats = $cachedData['stats'];
+            $popularServices = $cachedData['services'];
+            $fromCache = true;
+        } else {
+            // Получаем свежие данные
+            $serviceService = new ServiceService();
+            $stats = $serviceService->getStats();
+            $popularServices = $serviceService->getPopularServices();
+            
+            // Сохраняем в кэш на 2 минуты (сервисы могут часто меняться)
+            $cache->set($cacheKey, [
+                'stats' => $stats,
+                'services' => $popularServices
+            ], 120);
+            
+            $fromCache = false;
+        }
 
         return $this->render('services', [
             'title' => 'Управление сервисами',
             'currentPage' => 'services',
             'stats' => $stats,
-            'services' => $popularServices
+            'services' => $popularServices,
+            'fromCache' => $fromCache
         ]);
     }
 

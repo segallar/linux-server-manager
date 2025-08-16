@@ -3,9 +3,16 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Cloudflare</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTunnelModal">
-                    <i class="fas fa-plus"></i> Новый туннель
-                </button>
+                <div class="d-flex align-items-center">
+                    <?php if (isset($fromCache) && $fromCache): ?>
+                        <span class="badge bg-success me-2">
+                            <i class="fas fa-database"></i> Кэш
+                        </span>
+                    <?php endif; ?>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTunnelModal">
+                        <i class="fas fa-plus"></i> Новый туннель
+                    </button>
+                </div>
             </div>
         </div>
     </div>

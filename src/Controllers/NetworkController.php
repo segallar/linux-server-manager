@@ -44,18 +44,44 @@ class NetworkController extends Controller
     
     public function cloudflare()
     {
-        $cloudflareService = new CloudflareService();
-
-        $tunnels = $cloudflareService->getTunnels();
-        $stats = $cloudflareService->getStats();
-        $isInstalled = $cloudflareService->isInstalled();
+        global $app;
+        $cache = $app->cache;
+        
+        // Пытаемся получить данные из кэша
+        $cacheKey = 'cloudflare_data';
+        $cachedData = $cache->get($cacheKey);
+        
+        if ($cachedData !== null) {
+            // Используем кэшированные данные
+            $tunnels = $cachedData['tunnels'];
+            $stats = $cachedData['stats'];
+            $isInstalled = $cachedData['isInstalled'];
+            $fromCache = true;
+        } else {
+            // Получаем свежие данные
+            $cloudflareService = new CloudflareService();
+            
+            $tunnels = $cloudflareService->getTunnels();
+            $stats = $cloudflareService->getStats();
+            $isInstalled = $cloudflareService->isInstalled();
+            
+            // Сохраняем в кэш на 5 минут
+            $cache->set($cacheKey, [
+                'tunnels' => $tunnels,
+                'stats' => $stats,
+                'isInstalled' => $isInstalled
+            ], 300);
+            
+            $fromCache = false;
+        }
 
         return $this->render('network/cloudflare', [
             'title' => 'Cloudflare',
             'currentPage' => 'network',
             'tunnels' => $tunnels,
             'stats' => $stats,
-            'isInstalled' => $isInstalled
+            'isInstalled' => $isInstalled,
+            'fromCache' => $fromCache
         ]);
     }
 
