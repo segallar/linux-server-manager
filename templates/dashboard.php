@@ -80,8 +80,8 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Сеть</h6>
-                            <h3 class="mb-0"><?= $stats['network']['status'] ?></h3>
-                            <small><?= $stats['network']['active_count'] ?>/<?= $stats['network']['total_count'] ?> активных</small>
+                            <h3 class="mb-0"><?= htmlspecialchars($stats['network']['status'] ?? 'Online') ?></h3>
+                            <small><?= htmlspecialchars($stats['network']['active_count'] ?? count($stats['network']['interfaces'] ?? [])) ?>/<?= htmlspecialchars($stats['network']['total_count'] ?? count($stats['network']['interfaces'] ?? [])) ?> активных</small>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-network-wired fa-2x"></i>
@@ -162,15 +162,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (!empty($stats['processes'])): ?>
-                                    <?php foreach ($stats['processes'] as $process): ?>
+                                <?php if (!empty($processes)): ?>
+                                    <?php foreach ($processes as $process): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($process['pid']) ?></td>
                                         <td>
-                                            <small><?= htmlspecialchars(substr($process['command'], 0, 30)) ?><?= strlen($process['command']) > 30 ? '...' : '' ?></small>
+                                            <small><?= htmlspecialchars(substr($process['name'], 0, 30)) ?><?= strlen($process['name']) > 30 ? '...' : '' ?></small>
                                         </td>
                                         <td><?= htmlspecialchars($process['cpu']) ?>%</td>
-                                        <td><?= htmlspecialchars($process['mem']) ?>%</td>
+                                        <td><?= htmlspecialchars($process['memory']) ?>%</td>
                                     </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>

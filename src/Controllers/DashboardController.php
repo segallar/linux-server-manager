@@ -38,6 +38,9 @@ class DashboardController extends Controller
                 'date' => date('Y-m-d H:i:s')
             ],
             'network' => [
+                'status' => 'Online',
+                'active_count' => 2,
+                'total_count' => 2,
                 'interfaces' => [
                     [
                         'name' => 'eth0',
