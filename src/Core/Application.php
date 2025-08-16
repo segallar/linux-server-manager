@@ -8,6 +8,7 @@ class Application
     public Request $request;
     public Response $response;
     public string $rootPath;
+    private float $startTime;
 
     public function __construct(string $rootPath)
     {
@@ -15,6 +16,9 @@ class Application
         $this->request = new Request();
         $this->response = new Response();
         $this->router = new Router($this->request, $this->response, $this->rootPath);
+        
+        // Засекаем время начала
+        $this->startTime = microtime(true);
         
         // Устанавливаем таймауты для предотвращения 504 ошибок
         $this->setTimeouts();
@@ -56,6 +60,30 @@ class Application
             } else {
                 echo "Internal server error";
             }
+        }
+    }
+
+    /**
+     * Получить время выполнения в секундах
+     */
+    public function getExecutionTime(): float
+    {
+        return microtime(true) - $this->startTime;
+    }
+
+    /**
+     * Получить отформатированное время выполнения
+     */
+    public function getFormattedExecutionTime(): string
+    {
+        $time = $this->getExecutionTime();
+        
+        if ($time < 0.001) {
+            return number_format($time * 1000000, 0) . ' μs';
+        } elseif ($time < 1) {
+            return number_format($time * 1000, 1) . ' ms';
+        } else {
+            return number_format($time, 3) . ' s';
         }
     }
 }

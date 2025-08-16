@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// Загружаем helpers для работы с Git версиями
+require_once __DIR__ . '/../src/helpers.php';
+
 use App\Core\Application;
 use App\Controllers\DashboardController;
 use App\Controllers\SystemController;

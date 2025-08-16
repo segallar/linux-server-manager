@@ -80,6 +80,21 @@
                 <div class="pb-2 mb-3">
                     <?= $content ?? '' ?>
                 </div>
+                
+                <!-- Подвал с версией и временем выполнения -->
+                <footer class="footer mt-auto py-3 bg-light">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <small class="text-muted">
+                                    Linux Server Manager v<?= getGitVersion() ?>
+                                    | &copy; <?= date('Y') ?> Roman Segalla
+                                    | Время генерации: <?= getPageExecutionTime() ?>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
             </main>
         </div>
     </div>
