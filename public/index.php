@@ -1,8 +1,4 @@
 <?php
-// Включаем отображение ошибок для отладки
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\Application;
@@ -61,18 +57,9 @@ try {
     error_log("Critical error in index.php: " . $e->getMessage());
     error_log("Stack trace: " . $e->getTraceAsString());
     
-    // Показываем ошибку пользователю
+    // Показываем простую ошибку пользователю
     http_response_code(500);
-    echo "<h1>🚨 Критическая ошибка</h1>";
-    echo "<p><strong>Ошибка:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
-    echo "<p><strong>Файл:</strong> " . htmlspecialchars($e->getFile()) . ":" . $e->getLine() . "</p>";
-    
-    if (ini_get('display_errors')) {
-        echo "<h2>Стек вызовов:</h2>";
-        echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
-    }
-    
-    echo "<hr>";
-    echo "<p><a href='/debug.php'>🔍 Запустить отладку</a></p>";
+    echo "<h1>Ошибка сервера</h1>";
+    echo "<p>Произошла внутренняя ошибка сервера. Попробуйте обновить страницу.</p>";
 }
 ?>
