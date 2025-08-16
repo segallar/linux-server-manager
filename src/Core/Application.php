@@ -14,7 +14,7 @@ class Application
         $this->rootPath = $rootPath;
         $this->request = new Request();
         $this->response = new Response();
-        $this->router = new Router($this->request, $this->response);
+        $this->router = new Router($this->request, $this->response, $this->rootPath);
         
         // Устанавливаем таймауты для предотвращения 504 ошибок
         $this->setTimeouts();

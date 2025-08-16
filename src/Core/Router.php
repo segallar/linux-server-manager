@@ -7,11 +7,13 @@ class Router
     public Request $request;
     public Response $response;
     protected array $routes = [];
+    private string $rootPath;
 
-    public function __construct(Request $request, Response $response)
+    public function __construct(Request $request, Response $response, string $rootPath)
     {
         $this->request = $request;
         $this->response = $response;
+        $this->rootPath = $rootPath;
     }
 
     public function get($path, $callback)
@@ -41,7 +43,6 @@ class Router
         if (is_array($callback)) {
             $controller = new $callback[0]();
             $controller->action = $callback[1];
-            Application::$app->controller = $controller;
             $callback[0] = $controller;
         }
 
@@ -56,10 +57,10 @@ class Router
 
     public function renderContent($viewContent)
     {
-        $layout = Application::$app->controller->layout ?? 'main';
+        $layout = 'main'; // Используем дефолтный layout
         ob_start();
         $content = $viewContent;
-        include_once Application::$ROOT_DIR . "/templates/layouts/$layout.php";
+        include_once $this->rootPath . "/templates/layouts/$layout.php";
         return ob_get_clean();
     }
 
@@ -73,15 +74,13 @@ class Router
         return $this->renderContent($errorContent);
     }
 
-
-
     protected function renderOnlyView($view, $params)
     {
         foreach ($params as $key => $value) {
             $$key = $value;
         }
         ob_start();
-        include_once Application::$ROOT_DIR . "/templates/$view.php";
+        include_once $this->rootPath . "/templates/$view.php";
         return ob_get_clean();
     }
 }

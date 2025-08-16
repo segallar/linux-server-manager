@@ -16,6 +16,9 @@ $dotenv->load();
 // Создаем экземпляр приложения
 $app = new Application(__DIR__ . '/..');
 
+// Делаем приложение доступным глобально для контроллеров
+global $app;
+
 // Регистрируем маршруты
 $app->router->get('/', [DashboardController::class, 'index']);
 $app->router->get('/system', [SystemController::class, 'index']);

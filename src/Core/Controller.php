@@ -6,6 +6,18 @@ class Controller
 {
     public string $layout = 'main';
     public string $action = '';
+    protected Router $router;
+    protected Response $response;
+
+    public function __construct()
+    {
+        // Получаем router и response из глобального контекста
+        global $app;
+        if (isset($app)) {
+            $this->router = $app->router;
+            $this->response = $app->response;
+        }
+    }
 
     public function setLayout($layout)
     {
@@ -14,18 +26,18 @@ class Controller
 
     public function render($view, $params = [])
     {
-        if (!isset(Application::$app)) {
-            throw new \Exception('Application not initialized. Use router to execute controllers.');
+        if (!isset($this->router)) {
+            throw new \Exception('Router not available. Controller not properly initialized.');
         }
-        return Application::$app->router->renderView($view, $params);
+        return $this->router->renderView($view, $params);
     }
 
     public function renderContent($content)
     {
-        if (!isset(Application::$app)) {
-            throw new \Exception('Application not initialized. Use router to execute controllers.');
+        if (!isset($this->router)) {
+            throw new \Exception('Router not available. Controller not properly initialized.');
         }
-        return Application::$app->router->renderContent($content);
+        return $this->router->renderContent($content);
     }
 
     public function json($data)
@@ -36,7 +48,11 @@ class Controller
 
     public function redirect($url)
     {
-        return Application::$app->response->redirect($url);
+        if (!isset($this->response)) {
+            header("Location: $url");
+            exit;
+        }
+        return $this->response->redirect($url);
     }
 
     public function back()
