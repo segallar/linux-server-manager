@@ -196,23 +196,23 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6">
-                            <p><strong>ОС:</strong> <?= htmlspecialchars($stats['system']['os']) ?></p>
-                            <p><strong>Ядро:</strong> <?= htmlspecialchars($stats['system']['kernel']) ?></p>
-                            <p><strong>Время работы:</strong> <?= htmlspecialchars($stats['system']['uptime']) ?></p>
-                            <p><strong>Хост:</strong> <?= htmlspecialchars($stats['system']['hostname']) ?></p>
+                            <p><strong>ОС:</strong> <?= htmlspecialchars($stats['system']['os'] ?? 'Неизвестно') ?></p>
+                            <p><strong>Ядро:</strong> <?= htmlspecialchars($stats['system']['kernel'] ?? 'Неизвестно') ?></p>
+                            <p><strong>Время работы:</strong> <?= htmlspecialchars($stats['system']['uptime'] ?? 'Неизвестно') ?></p>
+                            <p><strong>Хост:</strong> <?= htmlspecialchars($stats['system']['hostname'] ?? 'Неизвестно') ?></p>
                         </div>
                         <div class="col-6">
                             <p>
                                 <strong>Загрузка:</strong> 
-                                <?= htmlspecialchars($stats['system']['load']) ?>
+                                <?= htmlspecialchars($stats['system']['load'] ?? 'Неизвестно') ?>
                                 <i class="fas fa-question-circle text-muted ms-1" 
                                    data-bs-toggle="tooltip" 
                                    data-bs-placement="top" 
                                    title="Load Average: средняя нагрузка на систему за 1, 5 и 15 минут. Значения показывают количество процессов в очереди на выполнение. Норма: меньше количества ядер CPU."></i>
                             </p>
-                            <p><strong>Пользователи:</strong> <?= htmlspecialchars($stats['system']['users']) ?></p>
-                            <p><strong>Дата:</strong> <?= htmlspecialchars($stats['system']['date']) ?></p>
-                            <p><strong>CPU:</strong> <?= htmlspecialchars($stats['cpu']['model']) ?></p>
+                            <p><strong>Пользователи:</strong> <?= htmlspecialchars($stats['system']['users'] ?? '0') ?></p>
+                            <p><strong>Дата:</strong> <?= htmlspecialchars($stats['system']['date'] ?? date('Y-m-d H:i:s')) ?></p>
+                            <p><strong>CPU:</strong> <?= htmlspecialchars($stats['cpu']['model'] ?? 'Неизвестно') ?></p>
                         </div>
                     </div>
                     
