@@ -3,14 +3,14 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Core\Application;
+use App\Controllers\DashboardController;
+
 echo "<h1>🧪 Тест контроллеров и шаблонов</h1>";
 
 try {
-    require_once __DIR__ . '/../vendor/autoload.php';
-
-    use App\Core\Application;
-    use App\Controllers\DashboardController;
-
     // Создаем приложение
     $app = new Application(__DIR__ . '/..');
     global $app;

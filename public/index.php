@@ -3,17 +3,17 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Core\Application;
+use App\Controllers\DashboardController;
+use App\Controllers\SystemController;
+use App\Controllers\ProcessController;
+use App\Controllers\ServiceController;
+use App\Controllers\NetworkController;
+use App\Controllers\PackageController;
+
 try {
-    require_once __DIR__ . '/../vendor/autoload.php';
-
-    use App\Core\Application;
-    use App\Controllers\DashboardController;
-    use App\Controllers\SystemController;
-    use App\Controllers\ProcessController;
-    use App\Controllers\ServiceController;
-    use App\Controllers\NetworkController;
-    use App\Controllers\PackageController;
-
     // Загружаем переменные окружения
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
     $dotenv->load();
