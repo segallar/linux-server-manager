@@ -133,65 +133,26 @@ class SmartLoadingIndicator {
     }
 
     setupPageTransitions() {
-        // Показываем индикатор при наведении на ссылки (мгновенно)
-        document.addEventListener('mouseenter', (e) => {
+        // Перехватываем все клики на ссылки
+        document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
-            if (link) {
-                const href = link.getAttribute('href');
-                // Проверяем, что это внутренняя ссылка и не якорь
-                if (href && href.startsWith('/') && !href.startsWith('#')) {
-                    // Показываем индикатор при наведении
-                    this.show(href);
+            if (link && link.href) {
+                const url = new URL(link.href);
+                const path = url.pathname;
+                
+                // Проверяем, что это внутренняя ссылка
+                if (path && path.startsWith('/') && !path.startsWith('#')) {
+                    // Показываем индикатор НЕМЕДЛЕННО
+                    this.show(path);
+                    
+                    // Небольшая задержка перед переходом, чтобы индикатор успел показаться
+                    e.preventDefault();
+                    setTimeout(() => {
+                        window.location.href = link.href;
+                    }, 50);
                 }
             }
         }, true);
-
-        // Показываем индикатор при клике на все ссылки навигации (как резерв)
-        document.addEventListener('click', (e) => {
-            const link = e.target.closest('a');
-            if (link) {
-                const href = link.getAttribute('href');
-                // Проверяем, что это внутренняя ссылка и не якорь
-                if (href && href.startsWith('/') && !href.startsWith('#')) {
-                    // Показываем индикатор немедленно
-                    this.show(href);
-                    
-                    // Предотвращаем двойной клик
-                    if (link.dataset.clicked) {
-                        e.preventDefault();
-                        return false;
-                    }
-                    link.dataset.clicked = 'true';
-                    setTimeout(() => {
-                        delete link.dataset.clicked;
-                    }, 1000);
-                }
-            }
-        });
-
-        // Дополнительный обработчик для всех ссылок в навигации
-        document.addEventListener('mousedown', (e) => {
-            const link = e.target.closest('a');
-            if (link) {
-                const href = link.getAttribute('href');
-                if (href && href.startsWith('/') && !href.startsWith('#')) {
-                    // Показываем индикатор при нажатии кнопки мыши
-                    this.show(href);
-                }
-            }
-        });
-
-        // Обработчик для всех элементов навигации
-        document.addEventListener('touchstart', (e) => {
-            const link = e.target.closest('a');
-            if (link) {
-                const href = link.getAttribute('href');
-                if (href && href.startsWith('/') && !href.startsWith('#')) {
-                    // Показываем индикатор при касании (для мобильных)
-                    this.show(href);
-                }
-            }
-        });
 
         // Показываем индикатор при навигации браузера (назад/вперед)
         window.addEventListener('popstate', () => {
@@ -216,13 +177,14 @@ class SmartLoadingIndicator {
     show(pagePath = '') {
         if (this.isVisible) return;
 
-        // Показываем индикатор немедленно
+        // Показываем индикатор НЕМЕДЛЕННО
         this.isVisible = true;
         this.startTime = Date.now();
         
         // Принудительно показываем индикатор
         this.element.style.display = 'flex';
         this.element.style.opacity = '1';
+        this.element.style.visibility = 'visible';
         
         // Принудительно обновляем DOM
         this.element.offsetHeight;
@@ -253,7 +215,7 @@ class SmartLoadingIndicator {
         this.updateTime();
         
         // Логируем для отладки
-        console.log('🚀 Показан индикатор загрузки для:', pagePath);
+        console.log('🚀 Показан индикатор загрузки для:', pagePath, 'время:', Date.now());
     }
 
     hide() {

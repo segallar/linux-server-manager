@@ -28,31 +28,31 @@
                 <div class="position-sticky">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link <?= ($currentPage ?? '') === 'dashboard' ? 'active' : '' ?>" href="/" onclick="SmartLoadingIndicator.show('/')">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'dashboard' ? 'active' : '' ?>" href="/">
                                 <i class="fas fa-tachometer-alt"></i>
                                 Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?= ($currentPage ?? '') === 'system' ? 'active' : '' ?>" href="/system" onclick="SmartLoadingIndicator.show('/system')">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'system' ? 'active' : '' ?>" href="/system">
                                 <i class="fas fa-server"></i>
                                 Системная информация
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?= ($currentPage ?? '') === 'processes' ? 'active' : '' ?>" href="/processes" onclick="SmartLoadingIndicator.show('/processes')">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'processes' ? 'active' : '' ?>" href="/processes">
                                 <i class="fas fa-tasks"></i>
                                 Управление процессами
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?= ($currentPage ?? '') === 'services' ? 'active' : '' ?>" href="/services" onclick="SmartLoadingIndicator.show('/services')">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'services' ? 'active' : '' ?>" href="/services">
                                 <i class="fas fa-cogs"></i>
                                 Управление сервисами
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?= ($currentPage ?? '') === 'packages' ? 'active' : '' ?>" href="/packages" onclick="SmartLoadingIndicator.show('/packages')">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'packages' ? 'active' : '' ?>" href="/packages">
                                 <i class="fas fa-box"></i>
                                 Управление пакетами
                             </a>
@@ -64,11 +64,11 @@
                                 <i class="fas fa-chevron-down ms-auto"></i>
                             </a>
                             <div class="collapse submenu" id="networkSubmenu">
-                                <a class="nav-link" href="/network/ssh" onclick="SmartLoadingIndicator.show('/network/ssh')"><i class="fas fa-terminal"></i>SSH туннели</a>
-                                <a class="nav-link" href="/network/port-forwarding" onclick="SmartLoadingIndicator.show('/network/port-forwarding')"><i class="fas fa-exchange-alt"></i>Проброс портов</a>
-                                <a class="nav-link" href="/network/wireguard" onclick="SmartLoadingIndicator.show('/network/wireguard')"><i class="fas fa-lock"></i>WireGuard</a>
-                                <a class="nav-link" href="/network/cloudflare" onclick="SmartLoadingIndicator.show('/network/cloudflare')"><i class="fas fa-cloud"></i>Cloudflare</a>
-                                <a class="nav-link" href="/network/routing" onclick="SmartLoadingIndicator.show('/network/routing')"><i class="fas fa-route"></i>Маршрутизация</a>
+                                <a class="nav-link" href="/network/ssh"><i class="fas fa-terminal"></i>SSH туннели</a>
+                                <a class="nav-link" href="/network/port-forwarding"><i class="fas fa-exchange-alt"></i>Проброс портов</a>
+                                <a class="nav-link" href="/network/wireguard"><i class="fas fa-lock"></i>WireGuard</a>
+                                <a class="nav-link" href="/network/cloudflare"><i class="fas fa-cloud"></i>Cloudflare</a>
+                                <a class="nav-link" href="/network/routing"><i class="fas fa-route"></i>Маршрутизация</a>
                             </div>
                         </li>
                     </ul>
