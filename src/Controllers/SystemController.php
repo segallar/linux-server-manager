@@ -10,7 +10,7 @@ class SystemController extends Controller
     public function index()
     {
         $systemService = new SystemService();
-        $info = $systemService->getSystemInfo();
+        $info = $systemService->getStats();
 
         return $this->render('system', [
             'title' => 'Системная информация',
@@ -26,7 +26,7 @@ class SystemController extends Controller
     {
         try {
             $systemService = new SystemService();
-            $info = $systemService->getSystemInfo();
+            $info = $systemService->getStats();
             
             return $this->json([
                 'success' => true,
