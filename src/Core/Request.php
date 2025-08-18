@@ -99,4 +99,18 @@ class Request
         
         return $body;
     }
+
+    public function isAjax()
+    {
+        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+    }
+
+    /**
+     * Установить параметр (используется роутером для параметров из URL)
+     */
+    public function setParam(string $key, string $value): void
+    {
+        $_GET[$key] = $value;
+    }
 }

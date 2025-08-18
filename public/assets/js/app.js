@@ -102,12 +102,13 @@ function makeAjaxRequest(url, method = 'GET', data = null) {
 
 // Функция обновления системной информации (отключена до создания API)
 function updateSystemInfo() {
-    // makeAjaxRequest('/api/system/info').done(function(data) {
-    //     if (data.success) {
-    //         updateSystemStats(data.data);
-    //     }
-    // });
-    console.log('updateSystemInfo: API не реализован');
+    makeAjaxRequest('/api/system/info').done(function(data) {
+        if (data.success) {
+            updateSystemStats(data.data);
+        }
+    }).fail(function() {
+        console.log('updateSystemInfo: API недоступен');
+    });
 }
 
 // Функция обновления статистики системы
@@ -120,61 +121,76 @@ function updateSystemStats(stats) {
 
 // Функции для WireGuard (отключены до создания API)
 function viewInterface(interfaceName) {
-    showAlert('Функция просмотра интерфейса будет доступна позже', 'info');
-    // makeAjaxRequest(`/api/wireguard/interface/${interfaceName}`).done(function(data) {
-    //     if (data.success) {
-    //         $('#interface-name').text(interfaceName);
-    //         $('#interface-details').html(data.html);
-    //         $('#interfaceDetailModal').modal('show');
-    //     }
-    // });
+    makeAjaxRequest(`/api/wireguard/interface/${interfaceName}`).done(function(data) {
+        if (data.success) {
+            $('#interface-name').text(interfaceName);
+            $('#interface-details').html(data.data);
+            $('#interfaceDetailModal').modal('show');
+        } else {
+            showAlert('Ошибка получения информации об интерфейсе: ' + data.message, 'danger');
+        }
+    }).fail(function() {
+        showAlert('Ошибка подключения к серверу', 'danger');
+    });
 }
 
 function upInterface(interfaceName) {
     if (confirm('Запустить интерфейс ' + interfaceName + '?')) {
-        showAlert('Функция запуска интерфейса будет доступна позже', 'info');
-        // makeAjaxRequest(`/api/wireguard/interface/${interfaceName}/up`, 'POST').done(function(data) {
-        //     if (data.success) {
-        //         showAlert('Интерфейс запущен', 'success');
-        //         setTimeout(() => location.reload(), 1000);
-        //     }
-        // });
+        makeAjaxRequest(`/api/wireguard/interface/${interfaceName}/up`, 'POST').done(function(data) {
+            if (data.success) {
+                showAlert('Интерфейс запущен', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка запуска интерфейса: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
     }
 }
 
 function downInterface(interfaceName) {
     if (confirm('Остановить интерфейс ' + interfaceName + '?')) {
-        showAlert('Функция остановки интерфейса будет доступна позже', 'info');
-        // makeAjaxRequest(`/api/wireguard/interface/${interfaceName}/down`, 'POST').done(function(data) {
-        //     if (data.success) {
-        //         showAlert('Интерфейс остановлен', 'success');
-        //         setTimeout(() => location.reload(), 1000);
-        //     }
-        // });
+        makeAjaxRequest(`/api/wireguard/interface/${interfaceName}/down`, 'POST').done(function(data) {
+            if (data.success) {
+                showAlert('Интерфейс остановлен', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка остановки интерфейса: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
     }
 }
 
 function restartInterface(interfaceName) {
     if (confirm('Перезапустить интерфейс ' + interfaceName + '?')) {
-        showAlert('Функция перезапуска интерфейса будет доступна позже', 'info');
-        // makeAjaxRequest(`/api/wireguard/interface/${interfaceName}/restart`, 'POST').done(function(data) {
-        //     if (data.success) {
-        //         showAlert('Интерфейс перезапущен', 'success');
-        //         setTimeout(() => location.reload(), 1000);
-        //     }
-        // });
+        makeAjaxRequest(`/api/wireguard/interface/${interfaceName}/restart`, 'POST').done(function(data) {
+            if (data.success) {
+                showAlert('Интерфейс перезапущен', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка перезапуска интерфейса: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
     }
 }
 
 function editInterface(interfaceName) {
-    showAlert('Функция редактирования интерфейса будет доступна позже', 'info');
-    // makeAjaxRequest(`/api/wireguard/interface/${interfaceName}/config`).done(function(data) {
-    //     if (data.success) {
-    //         $('#edit-interface-name').val(interfaceName);
-    //         $('#edit-interface-config').val(data.config);
-    //         $('#editInterfaceModal').modal('show');
-    //     }
-    // });
+    makeAjaxRequest(`/api/wireguard/interface/${interfaceName}/config`).done(function(data) {
+        if (data.success) {
+            $('#edit-interface-name').val(interfaceName);
+            $('#edit-interface-config').val(data.data.config);
+            $('#editInterfaceModal').modal('show');
+        } else {
+            showAlert('Ошибка получения конфигурации: ' + data.message, 'danger');
+        }
+    }).fail(function() {
+        showAlert('Ошибка подключения к серверу', 'danger');
+    });
 }
 
 // Функции для форм

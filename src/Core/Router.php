@@ -30,7 +30,14 @@ class Router
     {
         $path = $this->request->getPath();
         $method = strtolower($this->request->method());
+        
+        // Ищем точное совпадение
         $callback = $this->routes[$method][$path] ?? false;
+        
+        // Если точное совпадение не найдено, ищем с параметрами
+        if (!$callback) {
+            $callback = $this->findRouteWithParams($method, $path);
+        }
 
         if (!$callback) {
             return $this->renderError("Маршрут не найден: $method $path", 404);
@@ -82,5 +89,55 @@ class Router
         ob_start();
         include_once $this->rootPath . "/templates/$view.php";
         return ob_get_clean();
+    }
+
+    /**
+     * Поиск маршрута с параметрами
+     */
+    private function findRouteWithParams(string $method, string $path)
+    {
+        if (!isset($this->routes[$method])) {
+            return false;
+        }
+
+        foreach ($this->routes[$method] as $route => $callback) {
+            // Проверяем, содержит ли маршрут параметры {param}
+            if (strpos($route, '{') !== false) {
+                $pattern = $this->convertRouteToPattern($route);
+                if (preg_match($pattern, $path, $matches)) {
+                    // Извлекаем параметры и добавляем их в request
+                    $this->extractParams($route, $path, $matches);
+                    return $callback;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Конвертирует маршрут с параметрами в регулярное выражение
+     */
+    private function convertRouteToPattern(string $route): string
+    {
+        // Заменяем {param} на группы захвата
+        $pattern = preg_replace('/\{([^}]+)\}/', '([^/]+)', $route);
+        return '#^' . $pattern . '$#';
+    }
+
+    /**
+     * Извлекает параметры из URL и добавляет их в request
+     */
+    private function extractParams(string $route, string $path, array $matches): void
+    {
+        // Находим все параметры в маршруте
+        preg_match_all('/\{([^}]+)\}/', $route, $paramNames);
+        
+        // Добавляем параметры в request (пропускаем первый элемент - полное совпадение)
+        for ($i = 0; $i < count($paramNames[1]); $i++) {
+            $paramName = $paramNames[1][$i];
+            $paramValue = $matches[$i + 1] ?? '';
+            $this->request->setParam($paramName, $paramValue);
+        }
     }
 }

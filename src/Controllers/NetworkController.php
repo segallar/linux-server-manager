@@ -99,4 +99,227 @@ class NetworkController extends Controller
             'stats' => $stats
         ]);
     }
+
+    // ==================== WIREGUARD API METHODS ====================
+
+    /**
+     * API: Получить список WireGuard интерфейсов
+     */
+    public function getWireGuardInterfaces()
+    {
+        try {
+            $wireguardService = new WireGuardService();
+            $interfaces = $wireguardService->getInterfaces();
+            
+            return $this->json([
+                'success' => true,
+                'data' => $interfaces
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка получения интерфейсов WireGuard: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Получить информацию о конкретном WireGuard интерфейсе
+     */
+    public function getWireGuardInterface()
+    {
+        try {
+            $interfaceName = $this->request->get('name');
+            if (!$interfaceName) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указано имя интерфейса'
+                ]);
+            }
+
+            $wireguardService = new WireGuardService();
+            $interface = $wireguardService->getInterfaceInfo($interfaceName);
+            
+            if (!$interface) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Интерфейс не найден'
+                ]);
+            }
+            
+            return $this->json([
+                'success' => true,
+                'data' => $interface
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка получения информации об интерфейсе: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Запустить WireGuard интерфейс
+     */
+    public function upWireGuardInterface()
+    {
+        try {
+            $interfaceName = $this->request->get('name');
+            if (!$interfaceName) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указано имя интерфейса'
+                ]);
+            }
+
+            $wireguardService = new WireGuardService();
+            $result = $wireguardService->upInterface($interfaceName);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка запуска интерфейса: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Остановить WireGuard интерфейс
+     */
+    public function downWireGuardInterface()
+    {
+        try {
+            $interfaceName = $this->request->get('name');
+            if (!$interfaceName) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указано имя интерфейса'
+                ]);
+            }
+
+            $wireguardService = new WireGuardService();
+            $result = $wireguardService->downInterface($interfaceName);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка остановки интерфейса: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Перезапустить WireGuard интерфейс
+     */
+    public function restartWireGuardInterface()
+    {
+        try {
+            $interfaceName = $this->request->get('name');
+            if (!$interfaceName) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указано имя интерфейса'
+                ]);
+            }
+
+            $wireguardService = new WireGuardService();
+            $result = $wireguardService->restartInterface($interfaceName);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка перезапуска интерфейса: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Получить конфигурацию WireGuard интерфейса
+     */
+    public function getWireGuardConfig()
+    {
+        try {
+            $interfaceName = $this->request->get('name');
+            if (!$interfaceName) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указано имя интерфейса'
+                ]);
+            }
+
+            $wireguardService = new WireGuardService();
+            $config = $wireguardService->getInterfaceConfig($interfaceName);
+            
+            if (!$config) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Конфигурация не найдена'
+                ]);
+            }
+            
+            return $this->json([
+                'success' => true,
+                'data' => [
+                    'interface' => $interfaceName,
+                    'config' => $config
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка получения конфигурации: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Обновить конфигурацию WireGuard интерфейса
+     */
+    public function updateWireGuardConfig()
+    {
+        try {
+            $interfaceName = $this->request->get('name');
+            $config = $this->request->post('config');
+            
+            if (!$interfaceName) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указано имя интерфейса'
+                ]);
+            }
+            
+            if (!$config) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указана конфигурация'
+                ]);
+            }
+
+            $wireguardService = new WireGuardService();
+            $result = $wireguardService->updateInterfaceConfig($interfaceName, $config);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка обновления конфигурации: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

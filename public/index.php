@@ -52,6 +52,21 @@ try {
     $app->router->post('/api/packages/autoremove', [PackageController::class, 'autoremove']);
     $app->router->get('/api/packages/info', [PackageController::class, 'getPackageInfo']);
 
+    // API маршруты для системной информации
+    $app->router->get('/api/system/info', [SystemController::class, 'getSystemInfo']);
+    $app->router->get('/api/system/stats', [SystemController::class, 'getSystemStats']);
+    $app->router->get('/api/system/processes', [ProcessController::class, 'getProcesses']);
+    $app->router->post('/api/system/processes/{id}/kill', [ProcessController::class, 'killProcess']);
+
+    // API маршруты для WireGuard
+    $app->router->get('/api/wireguard/interfaces', [NetworkController::class, 'getWireGuardInterfaces']);
+    $app->router->get('/api/wireguard/interface/{name}', [NetworkController::class, 'getWireGuardInterface']);
+    $app->router->post('/api/wireguard/interface/{name}/up', [NetworkController::class, 'upWireGuardInterface']);
+    $app->router->post('/api/wireguard/interface/{name}/down', [NetworkController::class, 'downWireGuardInterface']);
+    $app->router->post('/api/wireguard/interface/{name}/restart', [NetworkController::class, 'restartWireGuardInterface']);
+    $app->router->get('/api/wireguard/interface/{name}/config', [NetworkController::class, 'getWireGuardConfig']);
+    $app->router->post('/api/wireguard/interface/{name}/config', [NetworkController::class, 'updateWireGuardConfig']);
+
     // Запускаем приложение
     $app->run();
 
