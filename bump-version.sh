@@ -22,24 +22,30 @@ if [[ $CURRENT_VERSION =~ v([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
     
     echo "🔄 Новая версия: $NEW_VERSION"
     
-    # Создаем новый тег
-    echo "📝 Создаем тег: $NEW_VERSION"
-    if git tag -a "$NEW_VERSION" -m "Bump version to $NEW_VERSION"; then
-        echo "✅ Тег $NEW_VERSION создан"
-        
-        # Отправляем тег (без запуска pre-push hook)
-        echo "📤 Отправляем тег..."
-        if git push --no-verify origin "$NEW_VERSION"; then
-            echo "✅ Тег отправлен"
-            echo ""
-            echo "🎉 Версия обновлена до $NEW_VERSION!"
+    # Проверяем, существует ли тег
+    if git tag -l "$NEW_VERSION" | grep -q "$NEW_VERSION"; then
+        echo "ℹ️ Тег $NEW_VERSION уже существует"
+        echo "📋 Текущая версия остается: $CURRENT_VERSION"
+    else
+        # Создаем новый тег
+        echo "📝 Создаем тег: $NEW_VERSION"
+        if git tag -a "$NEW_VERSION" -m "Bump version to $NEW_VERSION"; then
+            echo "✅ Тег $NEW_VERSION создан"
+            
+            # Отправляем тег (без запуска pre-push hook)
+            echo "📤 Отправляем тег..."
+            if git push --no-verify origin "$NEW_VERSION"; then
+                echo "✅ Тег отправлен"
+                echo ""
+                echo "🎉 Версия обновлена до $NEW_VERSION!"
+            else
+                echo "❌ Ошибка при отправке тега"
+                exit 1
+            fi
         else
-            echo "❌ Ошибка при отправке тега"
+            echo "❌ Ошибка при создании тега"
             exit 1
         fi
-    else
-        echo "❌ Ошибка при создании тега"
-        exit 1
     fi
 else
     echo "❌ Не удалось распарсить версию: $CURRENT_VERSION"
