@@ -137,6 +137,34 @@ class ProcessService extends BaseService implements ProcessServiceInterface
     }
 
     /**
+     * Извлечь имя процесса из команды
+     */
+    protected function extractProcessName(string $command): string
+    {
+        // Убираем аргументы и пути, оставляем только имя файла
+        $command = trim($command);
+        
+        // Если команда в квадратных скобках (kernel process)
+        if (preg_match('/^\[(.+)\]$/', $command, $matches)) {
+            return $matches[1];
+        }
+        
+        // Берем последнюю часть пути (имя файла)
+        $parts = explode(' ', $command);
+        $firstPart = $parts[0];
+        
+        // Убираем путь, оставляем только имя файла
+        $name = basename($firstPart);
+        
+        // Если имя пустое или слишком длинное, возвращаем оригинальную команду
+        if (empty($name) || strlen($name) > 50) {
+            return substr($command, 0, 30) . (strlen($command) > 30 ? '...' : '');
+        }
+        
+        return $name;
+    }
+
+    /**
      * Получить количество процессов
      */
     public function getProcessCount(): int
@@ -157,6 +185,8 @@ class ProcessService extends BaseService implements ProcessServiceInterface
             return null;
         }
         
+        $command = implode(' ', array_slice($parts, 10));
+        
         return [
             'user' => $parts[0],
             'pid' => (int)$parts[1],
@@ -168,7 +198,8 @@ class ProcessService extends BaseService implements ProcessServiceInterface
             'state' => $parts[7],
             'start' => $parts[8],
             'time' => $parts[9],
-            'command' => implode(' ', array_slice($parts, 10))
+            'command' => $command,
+            'name' => $this->extractProcessName($command)
         ];
     }
 }
