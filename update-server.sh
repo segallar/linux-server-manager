@@ -56,15 +56,56 @@ if [ -d ".git" ]; then
     
     # Получаем последние изменения
     echo -e "${YELLOW}📥 Получение последних изменений с GitHub...${NC}"
-    git fetch origin
+    git fetch origin --tags
     
     # Переключаемся на основную ветку
     git checkout main
+    
+    # Получаем текущую версию до обновления
+    OLD_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+    echo -e "${BLUE}📋 Текущая версия: $OLD_VERSION${NC}"
     
     # Обновляем код
     echo -e "${YELLOW}🔄 Обновление кода...${NC}"
     if git pull origin main; then
         echo -e "${GREEN}✅ Код обновлен${NC}"
+        
+        # Проверяем, нужно ли создать новый тег для сервера
+        NEW_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        echo -e "${BLUE}📋 Новая версия: $NEW_VERSION${NC}"
+        
+        # Если версия не изменилась, но есть новые коммиты, создаем серверный тег
+        if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
+            echo -e "${YELLOW}🔄 Создание серверного тега для обновления...${NC}"
+            
+            # Извлекаем компоненты версии
+            if [[ $NEW_VERSION =~ v([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+                MAJOR=${BASH_REMATCH[1]}
+                MINOR=${BASH_REMATCH[2]}
+                PATCH=${BASH_REMATCH[3]}
+                
+                # Создаем серверный тег с суффиксом
+                SERVER_PATCH=$((PATCH + 1))
+                SERVER_VERSION="v${MAJOR}.${MINOR}.${SERVER_PATCH}"
+                
+                # Проверяем, существует ли тег
+                if ! git tag -l "$SERVER_VERSION" | grep -q "$SERVER_VERSION"; then
+                    git tag -a "$SERVER_VERSION" -m "Server update: $SERVER_VERSION - $(date)"
+                    echo -e "${GREEN}✅ Серверный тег создан: $SERVER_VERSION${NC}"
+                    
+                    # Отправляем тег в удаленный репозиторий
+                    if git push origin "$SERVER_VERSION"; then
+                        echo -e "${GREEN}✅ Серверный тег отправлен в GitHub${NC}"
+                    else
+                        echo -e "${YELLOW}⚠️ Не удалось отправить тег в GitHub${NC}"
+                    fi
+                else
+                    echo -e "${YELLOW}⚠️ Тег $SERVER_VERSION уже существует${NC}"
+                fi
+            fi
+        else
+            echo -e "${GREEN}✅ Версия обновлена: $OLD_VERSION → $NEW_VERSION${NC}"
+        fi
     else
         echo -e "${RED}❌ Ошибка при обновлении кода${NC}"
         echo -e "${YELLOW}🔄 Попытка принудительного обновления...${NC}"
@@ -161,4 +202,5 @@ echo -e "${BLUE}📦 Резервная копия: $BACKUP_FILE${NC}"
 # Информация о версии
 echo -e "${BLUE}📋 Информация о версии:${NC}"
 git log --oneline -1
-git tag --sort=-version:refname | head -1
+CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+echo -e "${GREEN}✅ Текущая версия: $CURRENT_VERSION${NC}"
