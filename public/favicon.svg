@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Фон -->
+  <rect width="32" height="32" rx="4" fill="url(#grad1)"/>
+  
+  <!-- Сервер (основа) -->
+  <rect x="6" y="8" width="20" height="16" rx="2" fill="url(#grad2)" stroke="#1e40af" stroke-width="1"/>
+  
+  <!-- Светодиоды -->
+  <circle cx="9" cy="12" r="1.5" fill="#10b981"/>
+  <circle cx="12" cy="12" r="1.5" fill="#f59e0b"/>
+  <circle cx="15" cy="12" r="1.5" fill="#ef4444"/>
+  
+  <!-- Вентиляционные отверстия -->
+  <rect x="8" y="16" width="2" height="1" fill="#1e40af"/>
+  <rect x="11" y="16" width="2" height="1" fill="#1e40af"/>
+  <rect x="14" y="16" width="2" height="1" fill="#1e40af"/>
+  <rect x="17" y="16" width="2" height="1" fill="#1e40af"/>
+  <rect x="20" y="16" width="2" height="1" fill="#1e40af"/>
+  
+  <!-- Шестеренка (система управления) -->
+  <g transform="translate(22, 6)">
+    <circle cx="0" cy="0" r="3" fill="#fbbf24" stroke="#d97706" stroke-width="0.5"/>
+    <circle cx="0" cy="0" r="1.5" fill="#d97706"/>
+    <!-- Зубцы шестеренки -->
+    <rect x="-0.3" y="-3.5" width="0.6" height="1.5" fill="#d97706"/>
+    <rect x="-0.3" y="2" width="0.6" height="1.5" fill="#d97706"/>
+    <rect x="-3.5" y="-0.3" width="1.5" height="0.6" fill="#d97706"/>
+    <rect x="2" y="-0.3" width="1.5" height="0.6" fill="#d97706"/>
+    <rect x="-2.5" y="-2.5" width="0.6" height="1.5" fill="#d97706" transform="rotate(45)"/>
+    <rect x="1.5" y="1.5" width="0.6" height="1.5" fill="#d97706" transform="rotate(45)"/>
+    <rect x="-2.5" y="1.5" width="0.6" height="1.5" fill="#d97706" transform="rotate(-45)"/>
+    <rect x="1.5" y="-2.5" width="0.6" height="1.5" fill="#d97706" transform="rotate(-45)"/>
+  </g>
+  
+  <!-- Текст "LSM" -->
+  <text x="16" y="26" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" font-weight="bold" fill="white">LSM</text>
+</svg>
