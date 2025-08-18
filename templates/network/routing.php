@@ -89,6 +89,70 @@
         </div>
     </div>
 
+    <!-- Информация об интерфейсах -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-network-wired"></i> Сетевые интерфейсы
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($interfaces)): ?>
+                        <div class="row">
+                            <?php foreach ($interfaces as $interface): ?>
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card border-<?= $interface['status'] === 'up' ? 'success' : 'secondary' ?>">
+                                        <div class="card-header bg-<?= $interface['status'] === 'up' ? 'success' : 'secondary' ?> text-white">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-<?= strpos($interface['name'], 'wg') === 0 ? 'shield-alt' : (strpos($interface['name'], 'wlan') === 0 ? 'wifi' : 'ethernet') ?>"></i>
+                                                    <?= htmlspecialchars($interface['name']) ?>
+                                                </h6>
+                                                <span class="badge bg-<?= $interface['status'] === 'up' ? 'light' : 'dark' ?> text-<?= $interface['status'] === 'up' ? 'dark' : 'light' ?>">
+                                                    <?= $interface['status'] === 'up' ? 'Активен' : 'Неактивен' ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <?php if (!empty($interface['ips'])): ?>
+                                                <div class="mb-2">
+                                                    <strong>IP адреса:</strong>
+                                                    <div class="mt-1">
+                                                        <?php foreach ($interface['ips'] as $ip): ?>
+                                                            <span class="badge bg-primary me-1"><?= htmlspecialchars($ip) ?></span>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="text-muted">
+                                                    <small>IP адреса не назначены</small>
+                                                </div>
+                                            <?php endif; ?>
+                                            
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-circle text-<?= $interface['status'] === 'up' ? 'success' : 'secondary' ?>"></i>
+                                                    Статус: <?= $interface['status'] === 'up' ? 'Подключен' : 'Отключен' ?>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-network-wired fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Сетевые интерфейсы не найдены</h6>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Таблица маршрутов -->
     <div class="card">
         <div class="card-header">
@@ -191,10 +255,23 @@
                         <label for="routeInterface" class="form-label">Интерфейс</label>
                         <select class="form-select" id="routeInterface" required>
                             <option value="">Выберите интерфейс</option>
-                            <option value="eth0">eth0</option>
-                            <option value="wlan0">wlan0</option>
-                            <option value="wg0">wg0</option>
-                            <option value="tun0">tun0</option>
+                            <?php if (!empty($interfaces)): ?>
+                                <?php foreach ($interfaces as $interface): ?>
+                                    <?php if ($interface['status'] === 'up'): ?>
+                                        <option value="<?= htmlspecialchars($interface['name']) ?>">
+                                            <?= htmlspecialchars($interface['name']) ?>
+                                            <?php if (!empty($interface['ips'])): ?>
+                                                (<?= htmlspecialchars(implode(', ', $interface['ips'])) ?>)
+                                            <?php endif; ?>
+                                        </option>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="eth0">eth0</option>
+                                <option value="wlan0">wlan0</option>
+                                <option value="wg0">wg0</option>
+                                <option value="tun0">tun0</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                 </form>

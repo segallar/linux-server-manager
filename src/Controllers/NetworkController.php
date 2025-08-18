@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Services\WireGuardService;
 use App\Services\CloudflareService;
 use App\Services\NetworkService;
+use App\Services\SystemService;
 
 class NetworkController extends Controller
 {
@@ -143,15 +144,18 @@ class NetworkController extends Controller
     public function routing()
     {
         $networkService = new NetworkService();
+        $systemService = new SystemService();
         
         $routes = $networkService->getRoutes();
         $stats = $networkService->getRoutingStats();
+        $interfaces = $systemService->getNetworkInfo()['interfaces'];
         
         return $this->render('network/routing', [
             'title' => 'Маршрутизация',
             'currentPage' => 'network',
             'routes' => $routes,
-            'stats' => $stats
+            'stats' => $stats,
+            'interfaces' => $interfaces
         ]);
     }
 
