@@ -60,8 +60,8 @@ class GitVersion
     {
         $rootPath = dirname(dirname(__DIR__));
         
-        // Пытаемся получить последний тег
-        $tag = self::executeGitCommand($rootPath, 'describe --tags --abbrev=0 2>/dev/null');
+        // Пытаемся получить последний тег (по времени, а не по алфавиту)
+        $tag = self::executeGitCommand($rootPath, 'tag --sort=-version:refname | head -1 2>/dev/null');
         
         if ($tag) {
             // Убираем 'v' из начала тега если есть
