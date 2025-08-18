@@ -4,9 +4,6 @@
 $(document).ready(function() {
     console.log('jQuery подключен и готов к работе!');
     
-    // Инициализация активных ссылок
-    initActiveLinks();
-    
     // Функция для обновления данных в реальном времени
     function updateSystemInfo() {
         $.ajax({
@@ -76,29 +73,6 @@ $(document).ready(function() {
     
     // Глобальная функция для показа уведомлений
     window.showAlert = showAlert;
-    
-    // Инициализация активных ссылок
-    function initActiveLinks() {
-        // Определяем текущую страницу
-        var currentPath = window.location.pathname;
-        
-        // Убираем активный класс со всех ссылок в основной навигации
-        $('.navbar-nav .nav-link').removeClass('active');
-        
-        // Добавляем активный класс к текущей ссылке
-        $('.navbar-nav .nav-link').each(function() {
-            var href = $(this).attr('href');
-            if (href === currentPath) {
-                $(this).addClass('active');
-            }
-        });
-        
-        // Обработка кликов по ссылкам в навигации
-        $('.navbar-nav .nav-link').on('click', function() {
-            $('.navbar-nav .nav-link').removeClass('active');
-            $(this).addClass('active');
-        });
-    }
     
     // Анимации для карточек статистики
     $('.stats-card').hover(
