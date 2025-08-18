@@ -295,7 +295,10 @@ class SystemService extends BaseService implements SystemServiceInterface
             
             if ($currentInterface && strpos($line, 'inet ') !== false) {
                 if (preg_match('/inet\s+([0-9.]+)/', $line, $matches)) {
-                    $currentInterface['ip'] = $matches[1];
+                    // Берем первый IP адрес для интерфейса
+                    if (empty($currentInterface['ip'])) {
+                        $currentInterface['ip'] = $matches[1];
+                    }
                 }
             }
         }
