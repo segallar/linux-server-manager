@@ -182,7 +182,7 @@ class CloudflareService extends BaseService implements CloudflareServiceInterfac
     /**
      * Форматировать время создания
      */
-    protected function formatCreatedTime(string $createdTime): string
+    public function formatCreatedTime(string $createdTime): string
     {
         try {
             $timestamp = strtotime($createdTime);
