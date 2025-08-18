@@ -18,7 +18,7 @@
     </div>
 
     <?php 
-    $cloudflareService = new \App\Services\CloudflareService();
+    $cloudflareService = new \App\Services\Cloudflare\CloudflareService();
     $isAuthenticated = $cloudflareService->isAuthenticated();
     ?>
     
