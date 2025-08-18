@@ -214,10 +214,14 @@ class SystemService
      */
     public function getProcessStats(): array
     {
+        // Используем тот же способ подсчета, что и getProcessCount()
+        $totalProcesses = $this->getProcessCount();
+        
+        // Получаем детальную информацию о процессах для анализа статусов
         $processes = $this->getAllProcesses();
         
         $stats = [
-            'total' => count($processes),
+            'total' => $totalProcesses, // Используем точное количество из getProcessCount()
             'active' => 0,
             'sleeping' => 0,
             'stopped' => 0,
@@ -225,6 +229,7 @@ class SystemService
             'other' => 0
         ];
         
+        // Анализируем статусы только для отображенных процессов
         foreach ($processes as $process) {
             $status = $process['status'];
             switch ($status) {
