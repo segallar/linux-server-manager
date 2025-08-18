@@ -273,17 +273,16 @@ class SystemService extends BaseService implements SystemServiceInterface
             
             if (preg_match('/^\d+:\s+(\w+):/', $line, $matches)) {
                 $name = $matches[1];
-                if ($name !== 'lo') {
-                    $currentInterface = [
-                        'name' => $name,
-                        'status' => 'down',
-                        'ip' => ''
-                    ];
-                    $interfaces[] = $currentInterface;
-                }
+                // Включаем все интерфейсы, включая lo
+                $currentInterface = [
+                    'name' => $name,
+                    'status' => 'down',
+                    'ip' => ''
+                ];
+                $interfaces[] = $currentInterface;
             }
             
-            if ($currentInterface && strpos($line, 'state UP') !== false) {
+            if ($currentInterface && (strpos($line, 'state UP') !== false || strpos($line, 'state UNKNOWN') !== false)) {
                 $currentInterface['status'] = 'up';
             }
             
