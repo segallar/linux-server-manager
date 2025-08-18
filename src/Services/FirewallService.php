@@ -205,10 +205,18 @@ class FirewallService
             $lines = explode("\n", $output);
             
             foreach ($lines as $line) {
+                // Ищем строки с правилами в формате [ID] Rule
                 if (preg_match('/^\[(\d+)\]\s+(.+)$/', $line, $matches)) {
+                    $ruleId = $matches[1];
                     $ruleText = $matches[2];
+                    
+                    // Пропускаем заголовки
+                    if (strpos($ruleText, 'To') !== false || strpos($ruleText, '--') !== false) {
+                        continue;
+                    }
+                    
                     $rules[] = [
-                        'id' => $matches[1],
+                        'id' => $ruleId,
                         'action' => $this->parseUfwAction($ruleText),
                         'protocol' => $this->parseUfwProtocol($ruleText),
                         'port' => $this->parseUfwPort($ruleText),
@@ -453,22 +461,31 @@ class FirewallService
     
     private function parseUfwProtocol(string $ruleText): string
     {
-        if (strpos($ruleText, 'tcp') !== false) return 'tcp';
-        if (strpos($ruleText, 'udp') !== false) return 'udp';
+        if (strpos($ruleText, '/tcp') !== false) return 'tcp';
+        if (strpos($ruleText, '/udp') !== false) return 'udp';
+        if (strpos($ruleText, '/icmp') !== false) return 'icmp';
         return 'any';
     }
     
     private function parseUfwPort(string $ruleText): string
     {
-        if (preg_match('/port\s+(\d+)/', $ruleText, $matches)) {
+        // Ищем порт в формате "80/tcp", "443", "8080" и т.д.
+        if (preg_match('/(\d+)\/(tcp|udp|icmp)/', $ruleText, $matches)) {
             return $matches[1];
         }
+        if (preg_match('/^(\d+)\s/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        // Проверяем специальные случаи
+        if (strpos($ruleText, 'OpenSSH') !== false) return '22';
+        if (strpos($ruleText, 'Anywhere on wg0') !== false) return 'any';
         return 'any';
     }
     
     private function parseUfwSource(string $ruleText): string
     {
-        if (preg_match('/from\s+([^\s]+)/', $ruleText, $matches)) {
+        // Ищем источник в конце строки
+        if (preg_match('/\s+(Anywhere.*?)$/', $ruleText, $matches)) {
             return $matches[1];
         }
         return 'any';
@@ -476,10 +493,29 @@ class FirewallService
     
     private function parseUfwDescription(string $ruleText): string
     {
-        if (preg_match('/#\s*(.+)$/', $ruleText, $matches)) {
-            return $matches[1];
+        // Извлекаем описание из правила
+        $description = '';
+        
+        // Специальные случаи
+        if (strpos($ruleText, 'OpenSSH') !== false) {
+            $description = 'SSH доступ';
+        } elseif (strpos($ruleText, 'Anywhere on wg0') !== false) {
+            $description = 'WireGuard интерфейс';
+        } elseif (preg_match('/(\d+)\/(tcp|udp)/', $ruleText, $matches)) {
+            $port = $matches[1];
+            $protocol = $matches[2];
+            $description = "Порт $port ($protocol)";
+        } elseif (preg_match('/^(\d+)\s/', $ruleText, $matches)) {
+            $port = $matches[1];
+            $description = "Порт $port";
         }
-        return '';
+        
+        // Добавляем IPv6 индикатор
+        if (strpos($ruleText, '(v6)') !== false) {
+            $description .= ' (IPv6)';
+        }
+        
+        return $description;
     }
     
     // Вспомогательные методы для парсинга правил iptables
