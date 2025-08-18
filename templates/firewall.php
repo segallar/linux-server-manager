@@ -186,29 +186,71 @@
                         </thead>
                         <tbody>
                             <?php foreach ($rules as $rule): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($rule['id']) ?></td>
-                                <td>
-                                    <?php
-                                    $badgeClass = match($rule['action']) {
-                                        'ALLOW', 'ACCEPT' => 'bg-success',
-                                        'DENY', 'DROP' => 'bg-danger',
-                                        'REJECT' => 'bg-warning',
-                                        default => 'bg-secondary'
-                                    };
-                                    ?>
-                                    <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($rule['action']) ?></span>
-                                </td>
-                                <td><?= htmlspecialchars($rule['protocol'] ?? 'any') ?></td>
-                                <td><?= htmlspecialchars($rule['port'] ?? 'any') ?></td>
-                                <td><?= htmlspecialchars($rule['source'] ?? 'any') ?></td>
-                                <td><?= htmlspecialchars($rule['description'] ?? '') ?></td>
-                                <td>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteFirewallRule('<?= htmlspecialchars($rule['id']) ?>')" title="Удалить правило">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td><?= htmlspecialchars($rule['id']) ?></td>
+                                    <td>
+                                        <span class="badge bg-<?= $rule['action'] === 'ALLOW' ? 'success' : ($rule['action'] === 'DENY' ? 'danger' : 'warning') ?>">
+                                            <?= $rule['action'] ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info"><?= strtoupper($rule['protocol']) ?></span>
+                                    </td>
+                                    <td>
+                                        <?php if ($rule['port'] !== 'any'): ?>
+                                            <span class="badge bg-secondary"><?= $rule['port'] ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">Любой</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($rule['source'] !== 'any'): ?>
+                                            <span class="badge bg-dark"><?= htmlspecialchars($rule['source']) ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">Любой</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $icon = 'fa-shield-alt';
+                                        $description = $rule['description'] ?? '';
+                                        
+                                        // Определяем иконку на основе описания
+                                        if (strpos($description, 'SSH') !== false) {
+                                            $icon = 'fa-terminal';
+                                        } elseif (strpos($description, 'HTTP') !== false) {
+                                            $icon = 'fa-globe';
+                                        } elseif (strpos($description, 'HTTPS') !== false) {
+                                            $icon = 'fa-lock';
+                                        } elseif (strpos($description, 'WireGuard') !== false) {
+                                            $icon = 'fa-shield-virus';
+                                        } elseif (strpos($description, 'DNS') !== false) {
+                                            $icon = 'fa-search';
+                                        } elseif (strpos($description, 'SMTP') !== false) {
+                                            $icon = 'fa-envelope';
+                                        } elseif (strpos($description, 'FTP') !== false) {
+                                            $icon = 'fa-folder-open';
+                                        } elseif (strpos($description, 'MySQL') !== false || strpos($description, 'PostgreSQL') !== false) {
+                                            $icon = 'fa-database';
+                                        } elseif (strpos($description, 'Redis') !== false) {
+                                            $icon = 'fa-memory';
+                                        } elseif (strpos($description, 'NTP') !== false) {
+                                            $icon = 'fa-clock';
+                                        } elseif (strpos($description, 'SNMP') !== false) {
+                                            $icon = 'fa-chart-line';
+                                        } elseif (strpos($description, 'VPN') !== false) {
+                                            $icon = 'fa-user-shield';
+                                        }
+                                        ?>
+                                        <i class="fas <?= $icon ?> me-2"></i>
+                                        <?= htmlspecialchars($description) ?>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteFirewallRule('<?= htmlspecialchars($rule['id']) ?>')" title="Удалить правило">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>

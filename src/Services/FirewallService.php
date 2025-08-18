@@ -491,31 +491,88 @@ class FirewallService
         return 'any';
     }
     
-    private function parseUfwDescription(string $ruleText): string
+    /**
+     * Получает полное описание порта с сервисом
+     */
+    private function getPortDescription(int $port, string $protocol = 'tcp'): string
     {
-        // Извлекаем описание из правила
-        $description = '';
+        $service = $this->getPortServiceInfo($port, $protocol);
+        $protocolUpper = strtoupper($protocol);
         
-        // Специальные случаи
-        if (strpos($ruleText, 'OpenSSH') !== false) {
-            $description = 'SSH доступ';
-        } elseif (strpos($ruleText, 'Anywhere on wg0') !== false) {
-            $description = 'WireGuard интерфейс';
-        } elseif (preg_match('/(\d+)\/(tcp|udp)/', $ruleText, $matches)) {
-            $port = $matches[1];
-            $protocol = $matches[2];
-            $description = "Порт $port ($protocol)";
-        } elseif (preg_match('/^(\d+)\s/', $ruleText, $matches)) {
-            $port = $matches[1];
-            $description = "Порт $port";
-        }
+        return "Порт $port ($protocolUpper) - $service";
+    }
+    
+    /**
+     * Получает полное описание порта с сервисом
+     */
+    private function getPortServiceInfo(int $port, string $protocol = 'tcp'): string
+    {
+        $services = [
+            // Стандартные порты
+            20 => 'FTP Data',
+            21 => 'FTP Control',
+            22 => 'SSH',
+            23 => 'Telnet',
+            25 => 'SMTP',
+            53 => 'DNS',
+            67 => 'DHCP Server',
+            68 => 'DHCP Client',
+            69 => 'TFTP',
+            80 => 'HTTP',
+            110 => 'POP3',
+            123 => 'NTP',
+            137 => 'NetBIOS Name Service',
+            138 => 'NetBIOS Datagram',
+            139 => 'NetBIOS Session',
+            143 => 'IMAP',
+            161 => 'SNMP',
+            162 => 'SNMP Trap',
+            389 => 'LDAP',
+            443 => 'HTTPS',
+            445 => 'SMB/CIFS',
+            465 => 'SMTPS',
+            514 => 'Syslog',
+            515 => 'LPR/LPD',
+            587 => 'SMTP Submission',
+            631 => 'IPP (CUPS)',
+            993 => 'IMAPS',
+            995 => 'POP3S',
+            1433 => 'MSSQL',
+            1521 => 'Oracle DB',
+            1723 => 'PPTP VPN',
+            3306 => 'MySQL',
+            3389 => 'RDP',
+            5432 => 'PostgreSQL',
+            5900 => 'VNC',
+            6379 => 'Redis',
+            8080 => 'HTTP Alternative',
+            8443 => 'HTTPS Alternative',
+            9000 => 'Web Services',
+            9090 => 'Web Services',
+            27017 => 'MongoDB',
+            
+            // UDP порты
+            67 => 'DHCP Server',
+            68 => 'DHCP Client',
+            69 => 'TFTP',
+            123 => 'NTP',
+            137 => 'NetBIOS Name Service',
+            138 => 'NetBIOS Datagram',
+            161 => 'SNMP',
+            162 => 'SNMP Trap',
+            514 => 'Syslog',
+            520 => 'RIP',
+            1194 => 'OpenVPN',
+            1701 => 'L2TP',
+            500 => 'ISAKMP/IKE',
+            4500 => 'IPSec NAT-T',
+            3478 => 'STUN/TURN',
+            5349 => 'STUN/TURN TLS',
+            10000 => 'Webmin',
+            10001 => 'Webmin SSL',
+        ];
         
-        // Добавляем IPv6 индикатор
-        if (strpos($ruleText, '(v6)') !== false) {
-            $description .= ' (IPv6)';
-        }
-        
-        return $description;
+        return $services[$port] ?? 'Неизвестный сервис';
     }
     
     // Вспомогательные методы для парсинга правил iptables
@@ -626,5 +683,31 @@ class FirewallService
         }
         
         return ['success' => true, 'message' => 'Правило успешно добавлено'];
+    }
+
+    private function parseUfwDescription(string $ruleText): string
+    {
+        // Специальные случаи
+        if (strpos($ruleText, 'OpenSSH') !== false) {
+            $description = 'SSH доступ (порт 22)';
+        } elseif (strpos($ruleText, 'Anywhere on wg0') !== false) {
+            $description = 'WireGuard интерфейс';
+        } elseif (preg_match('/(\d+)\/(tcp|udp)/', $ruleText, $matches)) {
+            $port = (int)$matches[1];
+            $protocol = $matches[2];
+            $description = $this->getPortDescription($port, $protocol);
+        } elseif (preg_match('/^(\d+)\s/', $ruleText, $matches)) {
+            $port = (int)$matches[1];
+            $description = $this->getPortDescription($port, 'tcp');
+        } else {
+            $description = 'Правило файрвола';
+        }
+        
+        // Добавляем IPv6 индикатор
+        if (strpos($ruleText, '(v6)') !== false) {
+            $description .= ' (IPv6)';
+        }
+        
+        return $description;
     }
 }
