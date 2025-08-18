@@ -34,7 +34,10 @@ echo -e "${YELLOW}📋 Текущая версия: $CURRENT_VERSION${NC}"
 CURRENT_TAG_COMMIT=$(git rev-parse "$CURRENT_VERSION" 2>/dev/null || echo "")
 HEAD_COMMIT=$(git rev-parse HEAD)
 
-if [ "$CURRENT_TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+# Проверяем, есть ли тег на текущем коммите
+TAG_ON_HEAD=$(git tag --points-at HEAD | grep "$CURRENT_VERSION" || echo "")
+
+if [ "$CURRENT_TAG_COMMIT" != "$HEAD_COMMIT" ] && [ -z "$TAG_ON_HEAD" ]; then
     echo -e "${YELLOW}⚠️ Текущий тег $CURRENT_VERSION не связан с HEAD${NC}"
     echo -e "${YELLOW}   Тег указывает на: $(git show --oneline -s "$CURRENT_TAG_COMMIT" 2>/dev/null || echo "неизвестный коммит")${NC}"
     echo -e "${YELLOW}   HEAD указывает на: $(git show --oneline -s HEAD)${NC}"
