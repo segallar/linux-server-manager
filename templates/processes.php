@@ -163,9 +163,9 @@
                                 data-pid="<?= htmlspecialchars($process['pid']) ?>"
                                 data-command="<?= htmlspecialchars(strtolower($process['command'])) ?>"
                                 data-user="<?= htmlspecialchars($process['user']) ?>"
-                                data-status="<?= htmlspecialchars($process['status']) ?>"
+                                data-status="<?= htmlspecialchars($process['state']) ?>"
                                 data-cpu="<?= (float)$process['cpu'] ?>"
-                                data-mem="<?= (float)$process['mem'] ?>"
+                                data-mem="<?= (float)$process['memory'] ?>"
                                 data-rss="<?= htmlspecialchars($process['rss']) ?>"
                                 data-vsz="<?= htmlspecialchars($process['vsz']) ?>"
                                 data-time="<?= htmlspecialchars($process['time']) ?>">
@@ -180,8 +180,8 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge <?= (float)$process['mem'] > 10 ? 'bg-danger' : ((float)$process['mem'] > 5 ? 'bg-warning' : 'bg-success') ?>">
-                                        <?= htmlspecialchars($process['mem']) ?>%
+                                    <span class="badge <?= (float)$process['memory'] > 10 ? 'bg-danger' : ((float)$process['memory'] > 5 ? 'bg-warning' : 'bg-success') ?>">
+                                        <?= htmlspecialchars($process['memory']) ?>%
                                     </span>
                                 </td>
                                 <td><?= htmlspecialchars($process['rss']) ?></td>
@@ -191,20 +191,21 @@
                                     $statusClass = 'bg-secondary';
                                     $statusText = 'Неизвестно';
                                     
-                                    switch ($process['status']) {
-                                        case 'active':
+                                    switch ($process['state']) {
+                                        case 'R':
                                             $statusClass = 'bg-success';
                                             $statusText = 'Активен';
                                             break;
-                                        case 'sleeping':
+                                        case 'S':
+                                        case 'D':
                                             $statusClass = 'bg-warning';
                                             $statusText = 'Спящий';
                                             break;
-                                        case 'stopped':
+                                        case 'T':
                                             $statusClass = 'bg-danger';
                                             $statusText = 'Остановлен';
                                             break;
-                                        case 'zombie':
+                                        case 'Z':
                                             $statusClass = 'bg-dark';
                                             $statusText = 'Зомби';
                                             break;
@@ -218,7 +219,7 @@
                                         <button class="btn btn-outline-info" onclick="showProcessInfo(<?= $process['pid'] ?>)" title="Информация">
                                             <i class="fas fa-info-circle"></i>
                                         </button>
-                                        <?php if ($process['status'] === 'active'): ?>
+                                        <?php if ($process['state'] === 'R'): ?>
                                         <button class="btn btn-outline-warning" onclick="pauseProcess(<?= $process['pid'] ?>)" title="Приостановить">
                                             <i class="fas fa-pause"></i>
                                         </button>
