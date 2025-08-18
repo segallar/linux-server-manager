@@ -129,11 +129,46 @@ class SystemService extends BaseService implements SystemServiceInterface
      */
     public function getStats(): array
     {
-        $cpu = $this->getCpuInfo();
-        $memory = $this->getMemoryInfo();
-        $disk = $this->getDiskInfo();
-        $network = $this->getNetworkInfo();
-        $system = $this->getSystemInfo();
+        try {
+            $cpu = $this->getCpuInfo();
+        } catch (\Exception $e) {
+            $cpu = ['usage' => 0, 'load' => [0, 0, 0], 'cores' => 0, 'model' => 'Unknown'];
+        }
+        
+        try {
+            $memory = $this->getMemoryInfo();
+        } catch (\Exception $e) {
+            $memory = ['total' => '0', 'used' => '0', 'free' => '0', 'usage_percent' => 0];
+        }
+        
+        try {
+            $disk = $this->getDiskInfo();
+        } catch (\Exception $e) {
+            $disk = ['total' => '0', 'used' => '0', 'free' => '0', 'usage_percent' => 0];
+        }
+        
+        try {
+            $network = $this->getNetworkInfo();
+        } catch (\Exception $e) {
+            $network = ['status' => 'offline', 'active_count' => 0, 'total_count' => 0, 'interfaces' => []];
+        }
+        
+        try {
+            $system = $this->getSystemInfo();
+        } catch (\Exception $e) {
+            $system = [
+                'os' => 'Unknown',
+                'kernel' => 'Unknown',
+                'uptime' => 'Unknown',
+                'boot_time' => 'Unknown',
+                'timezone' => 'UTC',
+                'hostname' => 'Unknown',
+                'users' => '0',
+                'date' => date('Y-m-d H:i:s'),
+                'load' => '0.00, 0.00, 0.00',
+                'architecture' => 'Unknown'
+            ];
+        }
         
         return [
             'cpu' => $cpu,
