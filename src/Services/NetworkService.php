@@ -823,4 +823,140 @@ class NetworkService
         $output = shell_exec($command);
         return $output ? 'active' : 'inactive';
     }
+
+    /**
+     * Получить информацию о подключениях к SSH туннелям
+     */
+    public function getSSHTunnelConnections(): array
+    {
+        try {
+            $connections = [];
+            $configFile = '/etc/ssh-tunnels.conf';
+            
+            if (!file_exists($configFile)) {
+                return $connections;
+            }
+            
+            $config = parse_ini_file($configFile, true);
+            
+            foreach ($config as $tunnelId => $tunnel) {
+                // Проверяем, запущен ли туннель
+                $isRunning = $this->isSSHTunnelRunning($tunnelId);
+                
+                if ($isRunning && !empty($tunnel['last_used'])) {
+                    // Получаем информацию о подключениях к локальному порту
+                    $localPort = $tunnel['local_port'];
+                    $connectionInfo = $this->getPortConnections($localPort);
+                    
+                    if (!empty($connectionInfo)) {
+                        $connections[] = [
+                            'tunnel_id' => $tunnelId,
+                            'tunnel_name' => $tunnel['name'],
+                            'local_port' => $localPort,
+                            'remote_host' => $tunnel['host'],
+                            'remote_port' => $tunnel['remote_port'],
+                            'connections' => $connectionInfo,
+                            'last_used' => $tunnel['last_used'],
+                            'status' => 'active'
+                        ];
+                    } else {
+                        // Если нет активных подключений, но туннель запущен
+                        $connections[] = [
+                            'tunnel_id' => $tunnelId,
+                            'tunnel_name' => $tunnel['name'],
+                            'local_port' => $localPort,
+                            'remote_host' => $tunnel['host'],
+                            'remote_port' => $tunnel['remote_port'],
+                            'connections' => [],
+                            'last_used' => $tunnel['last_used'],
+                            'status' => 'idle'
+                        ];
+                    }
+                }
+            }
+            
+            // Сортируем по времени последнего использования
+            usort($connections, function($a, $b) {
+                return strtotime($b['last_used']) - strtotime($a['last_used']);
+            });
+            
+            return $connections;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+    
+    /**
+     * Проверить, запущен ли SSH туннель
+     */
+    private function isSSHTunnelRunning(string $tunnelId): bool
+    {
+        try {
+            $configFile = '/etc/ssh-tunnels.conf';
+            
+            if (!file_exists($configFile)) {
+                return false;
+            }
+            
+            $config = parse_ini_file($configFile, true);
+            if (!isset($config[$tunnelId])) {
+                return false;
+            }
+            
+            $tunnel = $config[$tunnelId];
+            $localPort = $tunnel['local_port'];
+            
+            // Проверяем, слушается ли порт
+            $command = "netstat -tlnp 2>/dev/null | grep ':$localPort '";
+            $output = shell_exec($command);
+            
+            return !empty($output);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Получить информацию о подключениях к порту
+     */
+    private function getPortConnections(int $port): array
+    {
+        try {
+            $connections = [];
+            
+            // Получаем активные подключения к порту
+            $command = "netstat -tn 2>/dev/null | grep ':$port ' | head -10";
+            $output = shell_exec($command);
+            
+            if (!empty($output)) {
+                $lines = explode("\n", trim($output));
+                
+                foreach ($lines as $line) {
+                    if (empty($line)) continue;
+                    
+                    // Парсим строку netstat
+                    $parts = preg_split('/\s+/', trim($line));
+                    if (count($parts) >= 4) {
+                        $localAddress = $parts[3];
+                        $remoteAddress = $parts[4];
+                        $state = $parts[5] ?? 'ESTABLISHED';
+                        
+                        // Извлекаем IP адрес из remote address
+                        if (preg_match('/(\d+\.\d+\.\d+\.\d+):(\d+)/', $remoteAddress, $matches)) {
+                            $connections[] = [
+                                'ip' => $matches[1],
+                                'port' => $matches[2],
+                                'state' => $state,
+                                'time' => date('Y-m-d H:i:s')
+                            ];
+                        }
+                    }
+                }
+            }
+            
+            return $connections;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
 }

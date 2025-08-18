@@ -126,7 +126,15 @@
                 </h5>
             </div>
             <div class="card-body">
-                <canvas id="connectionsChart" width="400" height="200"></canvas>
+                <?php if (empty($connections)): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Нет данных для отображения</h6>
+                        <p class="text-muted small">Активность подключений появится после создания SSH туннелей</p>
+                    </div>
+                <?php else: ?>
+                    <canvas id="connectionsChart" width="400" height="200"></canvas>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -140,29 +148,74 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">192.168.1.100:8080</h6>
-                            <small class="text-muted">Web Server Tunnel</small>
-                        </div>
-                        <span class="badge bg-success rounded-pill">2 мин назад</span>
+                <?php if (empty($connections)): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Нет активных подключений</h6>
+                        <p class="text-muted small">Подключения появятся после запуска SSH туннелей</p>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">10.0.0.50:3307</h6>
-                            <small class="text-muted">Database Tunnel</small>
-                        </div>
-                        <span class="badge bg-info rounded-pill">5 мин назад</span>
+                <?php else: ?>
+                    <div class="list-group list-group-flush">
+                        <?php 
+                        $displayedConnections = 0;
+                        foreach ($connections as $connection): 
+                            if ($displayedConnections >= 5) break; // Показываем только первые 5
+                            
+                            $tunnelName = htmlspecialchars($connection['tunnel_name']);
+                            $localPort = $connection['local_port'];
+                            $remoteHost = htmlspecialchars($connection['remote_host']);
+                            $remotePort = $connection['remote_port'];
+                            $lastUsed = $connection['last_used'];
+                            $status = $connection['status'];
+                            
+                            // Вычисляем время с последнего использования
+                            $timeAgo = '';
+                            if (!empty($lastUsed)) {
+                                $lastUsedTime = strtotime($lastUsed);
+                                $now = time();
+                                $diff = $now - $lastUsedTime;
+                                
+                                if ($diff < 60) {
+                                    $timeAgo = 'только что';
+                                    $badgeClass = 'bg-success';
+                                } elseif ($diff < 3600) {
+                                    $minutes = floor($diff / 60);
+                                    $timeAgo = $minutes . ' мин назад';
+                                    $badgeClass = 'bg-info';
+                                } elseif ($diff < 86400) {
+                                    $hours = floor($diff / 3600);
+                                    $timeAgo = $hours . ' ч назад';
+                                    $badgeClass = 'bg-warning';
+                                } else {
+                                    $days = floor($diff / 86400);
+                                    $timeAgo = $days . ' д назад';
+                                    $badgeClass = 'bg-secondary';
+                                }
+                            }
+                            
+                            // Определяем цвет статуса
+                            $statusClass = $status === 'active' ? 'status-online' : 'status-offline';
+                            $statusText = $status === 'active' ? 'Активен' : 'Неактивен';
+                        ?>
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1"><?= $remoteHost ?>:<?= $remotePort ?></h6>
+                                    <small class="text-muted"><?= $tunnelName ?> (порт <?= $localPort ?>)</small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <span class="status-indicator <?= $statusClass ?>"></span><?= $statusText ?>
+                                    </small>
+                                </div>
+                                <?php if (!empty($timeAgo)): ?>
+                                    <span class="badge <?= $badgeClass ?> rounded-pill"><?= $timeAgo ?></span>
+                                <?php endif; ?>
+                            </div>
+                        <?php 
+                            $displayedConnections++;
+                        endforeach; 
+                        ?>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">172.16.0.10:2222</h6>
-                            <small class="text-muted">SSH Tunnel</small>
-                        </div>
-                        <span class="badge bg-warning rounded-pill">15 мин назад</span>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

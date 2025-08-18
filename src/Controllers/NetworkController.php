@@ -16,6 +16,9 @@ class NetworkController extends Controller
         // Получаем реальные данные о SSH туннелях
         $tunnels = $networkService->getSSHTunnels();
         
+        // Получаем информацию о подключениях
+        $connections = $networkService->getSSHTunnelConnections();
+        
         // Вычисляем статистику
         $stats = [
             'active_tunnels' => 0,
@@ -30,10 +33,16 @@ class NetworkController extends Controller
             }
         }
         
+        // Подсчитываем общее количество подключений
+        foreach ($connections as $connection) {
+            $stats['connections'] += count($connection['connections']);
+        }
+        
         return $this->render('network/ssh', [
             'title' => 'SSH туннели',
             'currentPage' => 'network',
             'tunnels' => $tunnels,
+            'connections' => $connections,
             'stats' => $stats
         ]);
     }
