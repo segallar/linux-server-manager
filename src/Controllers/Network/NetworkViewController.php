@@ -9,6 +9,11 @@ use App\Services\Network\PortForwardingService;
 use App\Services\WireGuard\WireGuardService;
 use App\Services\Cloudflare\CloudflareService;
 
+// Явная загрузка autoloader для CloudflareService
+if (!class_exists('App\Services\Cloudflare\CloudflareService')) {
+    require_once __DIR__ . '/../../../vendor/autoload.php';
+}
+
 class NetworkViewController extends Controller implements NetworkViewControllerInterface
 {
     /**
