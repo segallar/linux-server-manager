@@ -155,6 +155,16 @@ class SmartLoadingIndicator {
                 if (href && href.startsWith('/') && !href.startsWith('#')) {
                     // Показываем индикатор немедленно
                     this.show(href);
+                    
+                    // Предотвращаем двойной клик
+                    if (link.dataset.clicked) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    link.dataset.clicked = 'true';
+                    setTimeout(() => {
+                        delete link.dataset.clicked;
+                    }, 1000);
                 }
             }
         });
@@ -209,7 +219,10 @@ class SmartLoadingIndicator {
         // Показываем индикатор немедленно
         this.isVisible = true;
         this.startTime = Date.now();
+        
+        // Принудительно показываем индикатор
         this.element.style.display = 'flex';
+        this.element.style.opacity = '1';
         
         // Принудительно обновляем DOM
         this.element.offsetHeight;
@@ -238,6 +251,9 @@ class SmartLoadingIndicator {
         // Запускаем анимацию немедленно
         this.startProgressAnimation();
         this.updateTime();
+        
+        // Логируем для отладки
+        console.log('🚀 Показан индикатор загрузки для:', pagePath);
     }
 
     hide() {
