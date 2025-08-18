@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\Package\PackageService;
+use App\Services\Package\PackageMaintenanceService;
 
 class PackageController extends Controller
 {
@@ -89,7 +90,8 @@ class PackageController extends Controller
     private function getUnusedPackagesSafely(PackageService $packageService): array
     {
         try {
-            return $packageService->getUnusedPackages();
+            $maintenanceService = new PackageMaintenanceService();
+            return $maintenanceService->getUnusedPackages();
         } catch (\Exception $e) {
             return [];
         }
@@ -148,8 +150,8 @@ class PackageController extends Controller
     public function cleanCache()
     {
         try {
-            $packageService = new PackageService();
-            $result = $packageService->cleanPackageCache();
+            $maintenanceService = new PackageMaintenanceService();
+            $result = $maintenanceService->cleanPackageCache();
             
             return $this->json($result);
         } catch (\Exception $e) {
@@ -163,8 +165,8 @@ class PackageController extends Controller
     public function autoremove()
     {
         try {
-            $packageService = new PackageService();
-            $result = $packageService->autoremovePackages();
+            $maintenanceService = new PackageMaintenanceService();
+            $result = $maintenanceService->autoremovePackages();
             
             return $this->json($result);
         } catch (\Exception $e) {
@@ -183,8 +185,8 @@ class PackageController extends Controller
                 return $this->json(['success' => false, 'message' => 'Не указан пакет']);
             }
 
-            $packageService = new PackageService();
-            $info = $packageService->getPackageInfo($packageName);
+            $maintenanceService = new PackageMaintenanceService();
+            $info = $maintenanceService->getPackageInfo($packageName);
             
             if ($info) {
                 return $this->json(['success' => true, 'data' => $info]);

@@ -13,8 +13,8 @@ class ProcessController extends Controller
         $systemService = new SystemService();
         $processService = new ProcessService();
         
-        $stats = $systemService->getProcessStats();
-        $processes = $systemService->getAllProcesses();
+        $stats = $processService->getProcessStats();
+        $processes = $processService->getAllProcesses();
         
         // Ограничиваем количество процессов для отображения
         $processes = array_slice($processes, 0, 100);
@@ -33,8 +33,8 @@ class ProcessController extends Controller
     public function getProcesses()
     {
         try {
-            $systemService = new SystemService();
-            $processes = $systemService->getAllProcesses();
+            $processService = new ProcessService();
+            $processes = $processService->getAllProcesses();
             
             // Ограничиваем количество для API
             $limit = (int)($this->request->get('limit', 50));
