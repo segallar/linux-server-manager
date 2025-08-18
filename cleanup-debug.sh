@@ -44,6 +44,12 @@ DEBUG_FILES=(
     "monitor-performance.sh"
     "performance-report.sh"
     
+    # Скрипты для исправления проблем
+    "fix-application.sh"
+    "fix-packages.sh"
+    "fix-syntax.sh"
+    "fix-timeout.sh"
+    
     # Временные файлы
     "VERSION"
     "update-version.sh"
@@ -99,6 +105,7 @@ find . -name "*.log" -not -path "./logs/*" -delete 2>/dev/null
 # Удаляем файлы с отладочной информацией
 find . -name "*debug*" -type f -delete 2>/dev/null
 find . -name "*test*" -type f -not -path "./templates/*" -not -path "./src/*" -delete 2>/dev/null
+find . -name "fix-*" -type f -delete 2>/dev/null
 
 echo ""
 echo "📋 Проверяем оставшиеся файлы..."
