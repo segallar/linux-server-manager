@@ -174,12 +174,12 @@
                                 <?php if (!empty($processes)): ?>
                                     <?php foreach ($processes as $process): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($process['pid']) ?></td>
+                                        <td><?= htmlspecialchars($process['pid'] ?? 'N/A') ?></td>
                                         <td>
-                                            <small><?= htmlspecialchars(substr($process['name'], 0, 30)) ?><?= strlen($process['name']) > 30 ? '...' : '' ?></small>
+                                            <small><?= htmlspecialchars(substr($process['name'] ?? 'Unknown', 0, 30)) ?><?= strlen($process['name'] ?? 'Unknown') > 30 ? '...' : '' ?></small>
                                         </td>
-                                        <td><?= htmlspecialchars($process['cpu']) ?>%</td>
-                                        <td><?= htmlspecialchars($process['memory']) ?>%</td>
+                                        <td><?= htmlspecialchars($process['cpu'] ?? '0') ?>%</td>
+                                        <td><?= htmlspecialchars($process['memory'] ?? '0') ?>%</td>
                                     </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -238,14 +238,14 @@
                         <?php foreach ($stats['network']['interfaces'] as $interface): ?>
                         <div class="col-12 mb-2">
                             <div class="d-flex align-items-center">
-                                <span class="badge <?= $interface['status'] === 'up' ? 'bg-success' : 'bg-secondary' ?> me-2">
-                                    <?= htmlspecialchars($interface['name']) ?>
+                                <span class="badge <?= ($interface['status'] ?? 'down') === 'up' ? 'bg-success' : 'bg-secondary' ?> me-2">
+                                    <?= htmlspecialchars($interface['name'] ?? 'Unknown') ?>
                                 </span>
-                                <?php if ($interface['status'] === 'up'): ?>
+                                <?php if (($interface['status'] ?? 'down') === 'up'): ?>
                                     <small class="text-muted">
                                         <i class="fas fa-circle text-success me-1"></i>
-                                        <?php if (!empty($interface['ips'])): ?>
-                                            <?= htmlspecialchars(implode(', ', $interface['ips'])) ?>
+                                        <?php if (!empty($interface['ip'])): ?>
+                                            <?= htmlspecialchars($interface['ip']) ?>
                                         <?php else: ?>
                                             Без IP
                                         <?php endif; ?>
