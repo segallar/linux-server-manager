@@ -14,6 +14,16 @@ class SmartLoadingIndicator {
         this.setupPageTransitions();
         this.hideOnPageLoad();
         this.checkCacheStatus();
+        
+        // Показываем индикатор при загрузке DOM для всех страниц
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.show(window.location.pathname);
+            });
+        } else {
+            // DOM уже загружен
+            this.show(window.location.pathname);
+        }
     }
 
     createIndicator() {
@@ -161,12 +171,24 @@ class SmartLoadingIndicator {
             }
         });
 
+        // Обработчик для всех элементов навигации
+        document.addEventListener('touchstart', (e) => {
+            const link = e.target.closest('a');
+            if (link) {
+                const href = link.getAttribute('href');
+                if (href && href.startsWith('/') && !href.startsWith('#')) {
+                    // Показываем индикатор при касании (для мобильных)
+                    this.show(href);
+                }
+            }
+        });
+
         // Показываем индикатор при навигации браузера (назад/вперед)
         window.addEventListener('popstate', () => {
             this.show(window.location.pathname);
         });
 
-        // Показываем индикатор при прямом переходе на медленные страницы
+        // Показываем индикатор при загрузке медленных страниц
         const slowPages = [
             '/network/cloudflare',
             '/services',
@@ -174,7 +196,10 @@ class SmartLoadingIndicator {
         ];
         
         if (slowPages.some(page => window.location.pathname === page)) {
-            this.show(window.location.pathname);
+            // Показываем индикатор сразу при загрузке страницы
+            setTimeout(() => {
+                this.show(window.location.pathname);
+            }, 10);
         }
     }
 
@@ -322,12 +347,20 @@ class SmartLoadingIndicator {
     }
 
     hideOnPageLoad() {
+        // Скрываем индикатор только после полной загрузки страницы
         window.addEventListener('load', () => {
-            setTimeout(() => this.hide(), 300);
+            // Даем время для завершения всех операций
+            setTimeout(() => this.hide(), 500);
         });
 
+        // Скрываем при переходе на другую страницу
         window.addEventListener('beforeunload', () => {
             this.hide();
+        });
+        
+        // Скрываем при ошибке загрузки
+        window.addEventListener('error', () => {
+            setTimeout(() => this.hide(), 1000);
         });
     }
 
