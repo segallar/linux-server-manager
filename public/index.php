@@ -90,6 +90,7 @@ try {
 
     // API маршруты для файрвола
     $app->router->get('/api/firewall/info', [FirewallController::class, 'getFirewallInfo']);
+    $app->router->get('/api/firewall/info/detailed', [FirewallController::class, 'getDetailedFirewallInfo']);
     $app->router->get('/api/firewall/stats', [FirewallController::class, 'getFirewallStats']);
     $app->router->get('/api/firewall/rules', [FirewallController::class, 'getFirewallRules']);
     $app->router->post('/api/firewall/rule/add', [FirewallController::class, 'addFirewallRule']);

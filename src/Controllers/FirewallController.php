@@ -257,6 +257,27 @@ class FirewallController extends Controller
     }
 
     /**
+     * API: Получить детальную информацию о файрволе
+     */
+    public function getDetailedFirewallInfo()
+    {
+        try {
+            $firewallService = new FirewallService();
+            $info = $firewallService->getDetailedFirewallInfo();
+            
+            return $this->json([
+                'success' => true,
+                'data' => $info
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка получения детальной информации о файрволе: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Парсит тип лога
      */
     private function parseLogType(string $logLine): string

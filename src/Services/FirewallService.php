@@ -52,15 +52,30 @@ class FirewallService
     public function getStatus(): string
     {
         if ($this->firewallType === 'ufw') {
-            $output = shell_exec('ufw status 2>/dev/null');
+            // Выполняем команду с полным путем и проверяем результат
+            $output = shell_exec('sudo ufw status 2>/dev/null');
+            
+            // Логируем для отладки
+            error_log("UFW Status Output: " . $output);
+            
             if (strpos($output, 'Status: active') !== false) {
                 return 'active';
             } elseif (strpos($output, 'Status: inactive') !== false) {
                 return 'inactive';
+            } else {
+                // Если не можем определить, пробуем альтернативный способ
+                $output2 = shell_exec('sudo ufw status verbose 2>/dev/null');
+                error_log("UFW Status Verbose Output: " . $output2);
+                
+                if (strpos($output2, 'Status: active') !== false) {
+                    return 'active';
+                } elseif (strpos($output2, 'Status: inactive') !== false) {
+                    return 'inactive';
+                }
             }
         } else {
             // Для iptables проверяем наличие правил
-            $output = shell_exec('iptables -L 2>/dev/null | wc -l');
+            $output = shell_exec('sudo iptables -L 2>/dev/null | wc -l');
             if ((int)$output > 3) { // Больше заголовков
                 return 'active';
             }
@@ -81,7 +96,7 @@ class FirewallService
         ];
         
         if ($this->firewallType === 'ufw') {
-            $output = shell_exec('ufw status numbered 2>/dev/null');
+            $output = shell_exec('sudo ufw status numbered 2>/dev/null');
             $lines = explode("\n", $output);
             
             foreach ($lines as $line) {
@@ -93,9 +108,9 @@ class FirewallService
             }
         } else {
             // Для iptables
-            $input = shell_exec('iptables -L INPUT 2>/dev/null | wc -l');
-            $output = shell_exec('iptables -L OUTPUT 2>/dev/null | wc -l');
-            $forward = shell_exec('iptables -L FORWARD 2>/dev/null | wc -l');
+            $input = shell_exec('sudo iptables -L INPUT 2>/dev/null | wc -l');
+            $output = shell_exec('sudo iptables -L OUTPUT 2>/dev/null | wc -l');
+            $forward = shell_exec('sudo iptables -L FORWARD 2>/dev/null | wc -l');
             
             $counts['input'] = max(0, (int)$input - 2); // Вычитаем заголовки
             $counts['output'] = max(0, (int)$output - 2);
@@ -117,7 +132,7 @@ class FirewallService
         ];
         
         if ($this->firewallType === 'ufw') {
-            $output = shell_exec('ufw status verbose 2>/dev/null');
+            $output = shell_exec('sudo ufw status verbose 2>/dev/null');
             if (preg_match('/Default:\s+(\w+)\s+\(incoming\)/', $output, $matches)) {
                 $policy['input'] = strtoupper($matches[1]);
             }
@@ -126,9 +141,9 @@ class FirewallService
             }
         } else {
             // Для iptables
-            $input = shell_exec('iptables -L INPUT --line-numbers 2>/dev/null | tail -1');
-            $output = shell_exec('iptables -L OUTPUT --line-numbers 2>/dev/null | tail -1');
-            $forward = shell_exec('iptables -L FORWARD --line-numbers 2>/dev/null | tail -1');
+            $input = shell_exec('sudo iptables -L INPUT --line-numbers 2>/dev/null | tail -1');
+            $output = shell_exec('sudo iptables -L OUTPUT --line-numbers 2>/dev/null | tail -1');
+            $forward = shell_exec('sudo iptables -L FORWARD --line-numbers 2>/dev/null | tail -1');
             
             if (preg_match('/\s+(\w+)\s*$/', $input, $matches)) {
                 $policy['input'] = strtoupper($matches[1]);
@@ -186,7 +201,7 @@ class FirewallService
         $rules = [];
         
         if ($this->firewallType === 'ufw') {
-            $output = shell_exec('ufw status numbered 2>/dev/null');
+            $output = shell_exec('sudo ufw status numbered 2>/dev/null');
             $lines = explode("\n", $output);
             
             foreach ($lines as $line) {
@@ -204,7 +219,7 @@ class FirewallService
             }
         } else {
             // Для iptables
-            $output = shell_exec('iptables -L --line-numbers 2>/dev/null');
+            $output = shell_exec('sudo iptables -L --line-numbers 2>/dev/null');
             $lines = explode("\n", $output);
             $currentChain = '';
             
@@ -255,9 +270,9 @@ class FirewallService
     {
         try {
             if ($this->firewallType === 'ufw') {
-                $command = "echo 'y' | ufw delete $id 2>&1";
+                $command = "echo 'y' | sudo ufw delete $id 2>&1";
             } else {
-                $command = "iptables -D INPUT $id 2>&1";
+                $command = "sudo iptables -D INPUT $id 2>&1";
             }
             
             $output = shell_exec($command);
@@ -288,9 +303,9 @@ class FirewallService
     {
         try {
             if ($this->firewallType === 'ufw') {
-                $command = "echo 'y' | ufw enable 2>&1";
+                $command = "echo 'y' | sudo ufw enable 2>&1";
             } else {
-                $command = "iptables -P INPUT DROP && iptables -P FORWARD DROP && iptables -A INPUT -i lo -j ACCEPT && iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT 2>&1";
+                $command = "sudo iptables -P INPUT DROP && sudo iptables -P FORWARD DROP && sudo iptables -A INPUT -i lo -j ACCEPT && sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT 2>&1";
             }
             
             $output = shell_exec($command);
@@ -321,9 +336,9 @@ class FirewallService
     {
         try {
             if ($this->firewallType === 'ufw') {
-                $command = "echo 'y' | ufw disable 2>&1";
+                $command = "echo 'y' | sudo ufw disable 2>&1";
             } else {
-                $command = "iptables -F && iptables -P INPUT ACCEPT && iptables -P FORWARD ACCEPT && iptables -P OUTPUT ACCEPT 2>&1";
+                $command = "sudo iptables -F && sudo iptables -P INPUT ACCEPT && sudo iptables -P FORWARD ACCEPT && sudo iptables -P OUTPUT ACCEPT 2>&1";
             }
             
             $output = shell_exec($command);
@@ -364,6 +379,67 @@ class FirewallService
         ];
         
         return $stats;
+    }
+    
+    /**
+     * Проверяет права доступа к файрволу
+     */
+    public function checkPermissions(): array
+    {
+        $result = [
+            'can_read' => false,
+            'can_write' => false,
+            'can_execute' => false,
+            'error' => null
+        ];
+        
+        try {
+            // Проверяем возможность чтения статуса
+            $testOutput = shell_exec('sudo ufw status 2>&1');
+            if ($testOutput && strpos($testOutput, 'Status:') !== false) {
+                $result['can_read'] = true;
+            } else {
+                $result['error'] = 'Не удается прочитать статус UFW: ' . $testOutput;
+            }
+            
+            // Проверяем возможность выполнения команд
+            $testOutput = shell_exec('sudo ufw status verbose 2>&1');
+            if ($testOutput && strpos($testOutput, 'Status:') !== false) {
+                $result['can_execute'] = true;
+            }
+            
+            // Проверяем возможность записи (попытка добавить тестовое правило)
+            // Это безопасная проверка, так как мы не сохраняем правило
+            $testOutput = shell_exec('sudo ufw --dry-run allow 99999 2>&1');
+            if ($testOutput && strpos($testOutput, 'Skipping') !== false) {
+                $result['can_write'] = true;
+            }
+            
+        } catch (\Exception $e) {
+            $result['error'] = 'Ошибка проверки прав: ' . $e->getMessage();
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Получает детальную информацию о файрволе с проверкой прав
+     */
+    public function getDetailedFirewallInfo(): array
+    {
+        $info = $this->getFirewallInfo();
+        $permissions = $this->checkPermissions();
+        
+        return [
+            'info' => $info,
+            'permissions' => $permissions,
+            'debug' => [
+                'firewall_type' => $this->firewallType,
+                'config_path' => $this->configPath,
+                'raw_status' => shell_exec('sudo ufw status 2>&1'),
+                'raw_verbose' => shell_exec('sudo ufw status verbose 2>&1')
+            ]
+        ];
     }
     
     // Вспомогательные методы для парсинга правил UFW
@@ -450,7 +526,7 @@ class FirewallService
     // Методы для добавления правил
     private function addUfwRule(array $rule): array
     {
-        $command = "ufw ";
+        $command = "sudo ufw ";
         
         if ($rule['action'] === 'ALLOW') {
             $command .= "allow ";
@@ -488,7 +564,7 @@ class FirewallService
     
     private function addIptablesRule(array $rule): array
     {
-        $command = "iptables -A INPUT ";
+        $command = "sudo iptables -A INPUT ";
         
         if (!empty($rule['protocol']) && $rule['protocol'] !== 'any') {
             $command .= "-p " . $rule['protocol'] . " ";
