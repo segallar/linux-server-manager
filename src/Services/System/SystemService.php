@@ -65,30 +65,43 @@ class SystemService extends BaseService implements SystemServiceInterface
      */
     public function getDiskInfo(): array
     {
-        $output = $this->executeCommand('df -h /');
+        $output = $this->executeCommand('df -h');
         $lines = explode("\n", trim($output));
         
-        if (count($lines) < 2) {
-            return ['usage_percent' => 0, 'total' => '0', 'used' => '0', 'free' => '0'];
+        $disks = [];
+        
+        // Skip header line
+        for ($i = 1; $i < count($lines); $i++) {
+            $line = trim($lines[$i]);
+            if (empty($line)) continue;
+            
+            $parts = preg_split('/\s+/', $line);
+            
+            if (count($parts) >= 6) {
+                $filesystem = $parts[0];
+                $size = $parts[1];
+                $used = $parts[2];
+                $available = $parts[3];
+                $usagePercent = (int)rtrim($parts[4], '%');
+                $mountedOn = $parts[5];
+                
+                // Skip special filesystems
+                if (in_array($filesystem, ['tmpfs', 'devtmpfs', 'sysfs', 'proc', 'devpts'])) {
+                    continue;
+                }
+                
+                $disks[] = [
+                    'filesystem' => $filesystem,
+                    'size' => $size,
+                    'used' => $used,
+                    'available' => $available,
+                    'usage_percent' => $usagePercent,
+                    'mounted_on' => $mountedOn
+                ];
+            }
         }
         
-        $parts = preg_split('/\s+/', trim($lines[1]));
-        
-        if (count($parts) < 5) {
-            return ['usage_percent' => 0, 'total' => '0', 'used' => '0', 'free' => '0'];
-        }
-        
-        $total = $parts[1];
-        $used = $parts[2];
-        $free = $parts[3];
-        $usagePercent = (int)rtrim($parts[4], '%');
-        
-        return [
-            'total' => $total,
-            'used' => $used,
-            'free' => $free,
-            'usage_percent' => $usagePercent
-        ];
+        return $disks;
     }
 
     /**
@@ -131,8 +144,18 @@ class SystemService extends BaseService implements SystemServiceInterface
     {
         try {
             $cpu = $this->getCpuInfo();
+            // Добавляем недостающие поля
+            $cpu['frequency'] = $this->getCpuFrequency();
+            $cpu['cache'] = $this->getCpuCache();
         } catch (\Exception $e) {
-            $cpu = ['usage' => 0, 'load' => [0, 0, 0], 'cores' => 0, 'model' => 'Unknown'];
+            $cpu = [
+                'usage' => 0, 
+                'load' => [0, 0, 0], 
+                'cores' => 0, 
+                'model' => 'Unknown',
+                'frequency' => 'Unknown',
+                'cache' => 'Unknown'
+            ];
         }
         
         try {
@@ -144,17 +167,28 @@ class SystemService extends BaseService implements SystemServiceInterface
         try {
             $disk = $this->getDiskInfo();
         } catch (\Exception $e) {
-            $disk = ['total' => '0', 'used' => '0', 'free' => '0', 'usage_percent' => 0];
+            $disk = [];
         }
         
         try {
             $network = $this->getNetworkInfo();
+            // Добавляем недостающие поля для сети
+            $network['active_count'] = count(array_filter($network['interfaces'], function($if) {
+                return $if['status'] === 'up';
+            }));
+            $network['total_count'] = count($network['interfaces']);
         } catch (\Exception $e) {
             $network = ['status' => 'offline', 'active_count' => 0, 'total_count' => 0, 'interfaces' => []];
         }
         
         try {
             $system = $this->getSystemInfo();
+            // Добавляем недостающие поля для системы
+            $system['hostname'] = gethostname();
+            $system['users'] = $this->getActiveUsers();
+            $system['date'] = date('Y-m-d H:i:s');
+            $system['load'] = implode(', ', sys_getloadavg());
+            $system['architecture'] = $this->getArchitecture();
         } catch (\Exception $e) {
             $system = [
                 'os' => 'Unknown',
@@ -170,12 +204,19 @@ class SystemService extends BaseService implements SystemServiceInterface
             ];
         }
         
+        try {
+            $processCount = $this->getProcessCount();
+        } catch (\Exception $e) {
+            $processCount = 0;
+        }
+        
         return [
             'cpu' => $cpu,
             'memory' => $memory,
             'disk' => $disk,
             'network' => $network,
             'system' => $system,
+            'process_count' => $processCount,
             'timestamp' => time()
         ];
     }
@@ -315,5 +356,54 @@ class SystemService extends BaseService implements SystemServiceInterface
         $seconds = (int)explode(' ', $uptime)[0];
         $bootTime = time() - $seconds;
         return date('Y-m-d H:i:s', $bootTime);
+    }
+
+    /**
+     * Получить частоту CPU
+     */
+    protected function getCpuFrequency(): string
+    {
+        $cpuInfo = file_get_contents('/proc/cpuinfo');
+        preg_match('/cpu MHz\s+:\s+([0-9.]+)/', $cpuInfo, $matches);
+        return $matches[1] ?? 'Unknown';
+    }
+
+    /**
+     * Получить кэш CPU
+     */
+    protected function getCpuCache(): string
+    {
+        $cpuInfo = file_get_contents('/proc/cpuinfo');
+        preg_match('/cache size\s+:\s+([0-9]+)/', $cpuInfo, $matches);
+        if (isset($matches[1])) {
+            return $matches[1] . ' KB';
+        }
+        return 'Unknown';
+    }
+
+    /**
+     * Получить количество активных пользователей
+     */
+    protected function getActiveUsers(): string
+    {
+        $output = $this->executeCommand('who | wc -l');
+        return trim($output) ?: '0';
+    }
+
+    /**
+     * Получить архитектуру системы
+     */
+    protected function getArchitecture(): string
+    {
+        return trim($this->executeCommand('uname -m')) ?: 'Unknown';
+    }
+
+    /**
+     * Получить количество процессов
+     */
+    protected function getProcessCount(): int
+    {
+        $output = $this->executeCommand('ps aux | wc -l');
+        return (int)trim($output) - 1; // Subtract header line
     }
 }
