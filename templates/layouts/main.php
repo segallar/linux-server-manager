@@ -90,6 +90,7 @@
                                     Linux Server Manager v<?= getGitVersion() ?>
                                     | &copy; <?= date('Y') ?> Roman Segalla
                                     | Время генерации: <?= getPageExecutionTime() ?>
+                                    | Время сервера: <?= date('Y-m-d H:i:s') ?>
                                 </small>
                             </div>
                         </div>
