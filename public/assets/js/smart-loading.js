@@ -123,7 +123,20 @@ class SmartLoadingIndicator {
     }
 
     setupPageTransitions() {
-        // Показываем индикатор при клике на все ссылки навигации
+        // Показываем индикатор при наведении на ссылки (мгновенно)
+        document.addEventListener('mouseenter', (e) => {
+            const link = e.target.closest('a');
+            if (link) {
+                const href = link.getAttribute('href');
+                // Проверяем, что это внутренняя ссылка и не якорь
+                if (href && href.startsWith('/') && !href.startsWith('#')) {
+                    // Показываем индикатор при наведении
+                    this.show(href);
+                }
+            }
+        }, true);
+
+        // Показываем индикатор при клике на все ссылки навигации (как резерв)
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
             if (link) {
@@ -131,6 +144,18 @@ class SmartLoadingIndicator {
                 // Проверяем, что это внутренняя ссылка и не якорь
                 if (href && href.startsWith('/') && !href.startsWith('#')) {
                     // Показываем индикатор немедленно
+                    this.show(href);
+                }
+            }
+        });
+
+        // Дополнительный обработчик для всех ссылок в навигации
+        document.addEventListener('mousedown', (e) => {
+            const link = e.target.closest('a');
+            if (link) {
+                const href = link.getAttribute('href');
+                if (href && href.startsWith('/') && !href.startsWith('#')) {
+                    // Показываем индикатор при нажатии кнопки мыши
                     this.show(href);
                 }
             }
@@ -156,9 +181,13 @@ class SmartLoadingIndicator {
     show(pagePath = '') {
         if (this.isVisible) return;
 
+        // Показываем индикатор немедленно
         this.isVisible = true;
         this.startTime = Date.now();
         this.element.style.display = 'flex';
+        
+        // Принудительно обновляем DOM
+        this.element.offsetHeight;
 
         const messages = {
             '/': 'Загрузка главной страницы...',
@@ -181,6 +210,7 @@ class SmartLoadingIndicator {
         // Проверяем кэш
         this.checkCacheForPage(pagePath);
         
+        // Запускаем анимацию немедленно
         this.startProgressAnimation();
         this.updateTime();
     }
@@ -253,20 +283,26 @@ class SmartLoadingIndicator {
 
     startProgressAnimation() {
         let progress = 0;
+        
+        // Сразу показываем небольшой прогресс
+        this.progressBar.style.width = '5%';
+        
         this.progressInterval = setInterval(() => {
             // Более быстрая анимация в начале
-            if (progress < 30) {
-                progress += Math.random() * 15;
-            } else if (progress < 70) {
-                progress += Math.random() * 8;
+            if (progress < 20) {
+                progress += Math.random() * 20;
+            } else if (progress < 50) {
+                progress += Math.random() * 12;
+            } else if (progress < 80) {
+                progress += Math.random() * 6;
             } else {
-                progress += Math.random() * 3;
+                progress += Math.random() * 2;
             }
             
-            if (progress > 85) progress = 85;
+            if (progress > 90) progress = 90;
             
             this.progressBar.style.width = progress + '%';
-        }, 150); // Уменьшили интервал для более плавной анимации
+        }, 100); // Еще более быстрый интервал
     }
 
     stopProgressAnimation() {
