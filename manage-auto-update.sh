@@ -57,8 +57,8 @@ install_cron() {
     # Создаем cron файл
     cat > "$CRON_FILE" << EOF
 # Автоматическое обновление Linux Server Manager
-# Проверка каждые 30 минут
-*/30 * * * * root /var/www/html/linux-server-manager/auto-update.sh > /dev/null 2>&1
+# Проверка каждую минуту
+* * * * * root /var/www/html/linux-server-manager/auto-update.sh > /dev/null 2>&1
 
 # Очистка старых логов каждые 24 часа
 0 2 * * * root find /var/www/html/linux-server-manager/logs -name "*.log" -mtime +7 -delete > /dev/null 2>&1
@@ -71,7 +71,7 @@ EOF
     systemctl reload cron 2>/dev/null || systemctl reload crond 2>/dev/null
     
     echo "✅ Cron задача установлена"
-    echo "📋 Расписание: каждые 30 минут"
+    echo "📋 Расписание: каждую минуту"
 }
 
 # Функция для удаления cron задачи
