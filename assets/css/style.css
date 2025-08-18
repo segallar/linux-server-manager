@@ -95,6 +95,17 @@ body {
     transition: margin-left 0.3s ease;
 }
 
+/* Дополнительный отступ для заголовков на страницах */
+.main-content h1,
+.main-content .h1,
+.main-content h2,
+.main-content .h2,
+.main-content h3,
+.main-content .h3 {
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
 /* Карточки для статистики */
 .stats-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
