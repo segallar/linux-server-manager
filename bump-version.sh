@@ -16,9 +16,9 @@ if [[ $CURRENT_VERSION =~ v([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
     MINOR=${BASH_REMATCH[2]}
     PATCH=${BASH_REMATCH[3]}
     
-    # Увеличиваем минорную версию
-    NEW_MINOR=$((MINOR + 1))
-    NEW_VERSION="v${MAJOR}.${NEW_MINOR}.0"
+    # Увеличиваем patch версию
+    NEW_PATCH=$((PATCH + 1))
+    NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
     
     echo "🔄 Новая версия: $NEW_VERSION"
     
