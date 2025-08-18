@@ -3,9 +3,9 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Services\SystemService;
-use App\Services\ServiceService;
-use App\Services\ProcessService;
+use App\Services\System\SystemService;
+use App\Services\Service\ServiceService;
+use App\Services\System\ProcessService;
 
 class DashboardController extends Controller
 {
@@ -60,7 +60,7 @@ class DashboardController extends Controller
         ];
 
         // Получаем реальные процессы
-        $processes = $processService->getTopProcesses(10);
+        $processes = $processService->getActiveProcesses(10);
 
         // Получаем реальные сервисы
         $services = $serviceService->getServices();

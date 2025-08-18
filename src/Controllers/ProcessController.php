@@ -3,8 +3,8 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Services\SystemService;
-use App\Services\ProcessService;
+use App\Services\System\SystemService;
+use App\Services\System\ProcessService;
 
 class ProcessController extends Controller
 {

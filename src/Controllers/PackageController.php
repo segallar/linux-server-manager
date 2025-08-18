@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Services\PackageService;
+use App\Services\Package\PackageService;
 
 class PackageController extends Controller
 {

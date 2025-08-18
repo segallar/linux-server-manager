@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Services\FirewallService;
+use App\Services\Firewall\FirewallService;
 
 class FirewallController extends Controller
 {
