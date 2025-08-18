@@ -152,19 +152,8 @@ class SmartLoadingIndicator {
             this.show(window.location.pathname);
         });
 
-        // Показываем индикатор при загрузке медленных страниц
-        const slowPages = [
-            '/network/cloudflare',
-            '/services',
-            '/packages'
-        ];
-        
-        if (slowPages.some(page => window.location.pathname === page)) {
-            // Показываем индикатор сразу при загрузке страницы
-            setTimeout(() => {
-                this.show(window.location.pathname);
-            }, 10);
-        }
+        // Убираем автоматический показ для медленных страниц
+        // Индикатор будет показываться только при переходах между страницами
     }
 
     show(pagePath = '') {
@@ -318,10 +307,15 @@ class SmartLoadingIndicator {
     }
 
     hideOnPageLoad() {
+        // Скрываем индикатор при загрузке DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => this.hide(), 100);
+        });
+
         // Скрываем индикатор только после полной загрузки страницы
         window.addEventListener('load', () => {
             // Даем время для завершения всех операций
-            setTimeout(() => this.hide(), 500);
+            setTimeout(() => this.hide(), 300);
         });
 
         // Скрываем при переходе на другую страницу
@@ -331,8 +325,16 @@ class SmartLoadingIndicator {
         
         // Скрываем при ошибке загрузки
         window.addEventListener('error', () => {
-            setTimeout(() => this.hide(), 1000);
+            setTimeout(() => this.hide(), 500);
         });
+
+        // Дополнительная защита - скрываем через 10 секунд максимум
+        setTimeout(() => {
+            if (this.isVisible) {
+                console.log('⚠️ Принудительное скрытие индикатора загрузки');
+                this.hide();
+            }
+        }, 10000);
     }
 
     // Методы для программного управления
