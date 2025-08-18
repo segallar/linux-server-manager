@@ -185,6 +185,7 @@ class SystemService extends BaseService implements SystemServiceInterface
             $system = $this->getSystemInfo();
             // Добавляем недостающие поля для системы
             $system['hostname'] = gethostname();
+            $system['domain'] = $this->getDomain();
             $system['users'] = $this->getActiveUsers();
             $system['date'] = date('Y-m-d H:i:s');
             $system['load'] = implode(', ', sys_getloadavg());
@@ -197,6 +198,7 @@ class SystemService extends BaseService implements SystemServiceInterface
                 'boot_time' => 'Unknown',
                 'timezone' => 'UTC',
                 'hostname' => 'Unknown',
+                'domain' => 'Unknown',
                 'users' => '0',
                 'date' => date('Y-m-d H:i:s'),
                 'load' => '0.00, 0.00, 0.00',
@@ -405,5 +407,30 @@ class SystemService extends BaseService implements SystemServiceInterface
     {
         $output = $this->executeCommand('ps aux | wc -l');
         return (int)trim($output) - 1; // Subtract header line
+    }
+
+    /**
+     * Получить домен системы
+     */
+    protected function getDomain(): string
+    {
+        $hostname = gethostname();
+        $output = $this->executeCommand('hostname -d');
+        $domain = trim($output);
+        
+        if (empty($domain) || $domain === '(none)') {
+            // Попробуем получить домен из /etc/hosts
+            $hosts = file_get_contents('/etc/hosts');
+            if (preg_match('/\s+' . preg_quote($hostname, '/') . '\s+([^\s]+)/', $hosts, $matches)) {
+                $parts = explode('.', $matches[1]);
+                if (count($parts) > 1) {
+                    array_shift($parts); // Убираем hostname
+                    return implode('.', $parts);
+                }
+            }
+            return 'local';
+        }
+        
+        return $domain;
     }
 }
