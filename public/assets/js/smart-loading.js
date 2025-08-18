@@ -141,7 +141,10 @@ class SmartLoadingIndicator {
                 // Проверяем, что это внутренняя ссылка и НЕ выпадающее меню
                 if (path && path.startsWith('/') && !path.startsWith('#') && 
                     !link.classList.contains('dropdown-toggle') && 
-                    !link.hasAttribute('data-bs-toggle')) {
+                    !link.hasAttribute('data-bs-toggle') &&
+                    !link.closest('.dropdown-menu') &&
+                    !link.closest('[data-bs-toggle="dropdown"]') &&
+                    !link.classList.contains('dropdown-item')) {
                     
                     // Показываем индикатор НЕМЕДЛЕННО
                     this.show(path);
@@ -152,6 +155,14 @@ class SmartLoadingIndicator {
                         window.location.href = link.href;
                     }, 50);
                 }
+            }
+            
+            // Принудительно скрываем индикатор при клике на dropdown элементы
+            if (e.target.closest('.dropdown-toggle') || 
+                e.target.closest('.dropdown-menu') || 
+                e.target.closest('[data-bs-toggle="dropdown"]') ||
+                e.target.classList.contains('dropdown-item')) {
+                this.hide();
             }
         }, true);
 
