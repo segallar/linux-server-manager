@@ -25,7 +25,7 @@
 #### 🎯 Основные настройки
 
 **Шаг 1: Обновление профиля репозитория**
-1. Перейдите на https://github.com/YOUR_USERNAME/linux-server-manager
+1. Перейдите на https://github.com/segallar/linux-server-manager
 2. Добавьте описание в профиль репозитория
 3. Настройте темы и метки
 
@@ -33,7 +33,7 @@
 В настройках репозитория **Settings** → **General**:
 
 - **Description**: `Web application for Linux server management with SSH tunnels, port forwarding, WireGuard and Cloudflare`
-- **Website**: `https://YOUR_USERNAME.github.io/linux-server-manager` (если настроены Pages)
+- **Website**: `https://segallar.github.io/linux-server-manager` (если настроены Pages)
 - **Topics**: `linux, server-management, ssh, wireguard, cloudflare, php, web-application`
 
 **Шаг 3: Настройка меток**
@@ -154,7 +154,7 @@ Add any other context about the problem here.
                     </div>
                 </div>
                 <div class="mt-4">
-                    <a href="https://github.com/YOUR_USERNAME/linux-server-manager" class="btn btn-primary btn-lg">
+                    <a href="https://github.com/segallar/linux-server-manager" class="btn btn-primary btn-lg">
                         <i class="fab fa-github"></i> View on GitHub
                     </a>
                 </div>
@@ -251,16 +251,16 @@ jobs:
 
 ### 🚀 Быстрый старт
 ```bash
-git clone https://github.com/YOUR_USERNAME/linux-server-manager.git
+git clone https://github.com/segallar/linux-server-manager.git
 cd linux-server-manager
 composer install
 php -S localhost:8000 -t public
 ```
 
 ### 📚 Документация
-- [Полная документация](https://github.com/YOUR_USERNAME/linux-server-manager/tree/main/docs)
-- [Инструкции по развертыванию](https://github.com/YOUR_USERNAME/linux-server-manager/blob/main/docs/DEPLOYMENT.md)
-- [Политика безопасности](https://github.com/YOUR_USERNAME/linux-server-manager/blob/main/docs/SECURITY.md)
+- [Полная документация](https://github.com/segallar/linux-server-manager/tree/main/docs)
+- [Инструкции по развертыванию](https://github.com/segallar/linux-server-manager/blob/main/docs/DEPLOYMENT.md)
+- [Политика безопасности](https://github.com/segallar/linux-server-manager/blob/main/docs/SECURITY.md)
 ```
 
 ---
@@ -316,10 +316,10 @@ php -S localhost:8000 -t public
 ## 🔗 Полезные ссылки
 
 ### 📋 Основные ссылки
-- **Репозиторий**: https://github.com/YOUR_USERNAME/linux-server-manager
-- **Issues**: https://github.com/YOUR_USERNAME/linux-server-manager/issues
-- **Releases**: https://github.com/YOUR_USERNAME/linux-server-manager/releases
-- **GitHub Pages**: https://YOUR_USERNAME.github.io/linux-server-manager
+- **Репозиторий**: https://github.com/segallar/linux-server-manager
+- **Issues**: https://github.com/segallar/linux-server-manager/issues
+- **Releases**: https://github.com/segallar/linux-server-manager/releases
+- **GitHub Pages**: https://segallar.github.io/linux-server-manager
 
 ### 📚 Документация
 - **[Основная документация](README.md)** - Индекс всех документов
