@@ -91,7 +91,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin: 1rem 0;
-    margin-top: 6rem; /* Увеличенный отступ для фиксированной навигации */
+    margin-top: 8rem; /* Увеличенный отступ для фиксированной навигации */
     transition: margin-left 0.3s ease;
 }
 
@@ -210,7 +210,7 @@ body {
     
     .main-content {
         padding: 1rem;
-        margin-top: 5.5rem;
+        margin-top: 7rem;
     }
     
     .stats-card {
@@ -277,7 +277,7 @@ body {
 @media (max-width: 480px) {
     .main-content {
         padding: 0.75rem;
-        margin-top: 5rem;
+        margin-top: 6.5rem;
     }
     
     .stats-card {
@@ -311,7 +311,7 @@ body {
 /* Ландшафтная ориентация на мобильных */
 @media (max-width: 768px) and (orientation: landscape) {
     .main-content {
-        margin-top: 5rem;
+        margin-top: 6.5rem;
     }
 }
 
