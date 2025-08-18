@@ -67,6 +67,25 @@ try {
     $app->router->get('/api/wireguard/interface/{name}/config', [NetworkController::class, 'getWireGuardConfig']);
     $app->router->post('/api/wireguard/interface/{name}/config', [NetworkController::class, 'updateWireGuardConfig']);
 
+    // API маршруты для SSH туннелей
+    $app->router->get('/api/ssh/tunnels', [NetworkController::class, 'getSSHTunnels']);
+    $app->router->post('/api/ssh/tunnel/create', [NetworkController::class, 'createSSHTunnel']);
+    $app->router->post('/api/ssh/tunnel/{id}/start', [NetworkController::class, 'startSSHTunnel']);
+    $app->router->post('/api/ssh/tunnel/{id}/stop', [NetworkController::class, 'stopSSHTunnel']);
+    $app->router->delete('/api/ssh/tunnel/{id}', [NetworkController::class, 'deleteSSHTunnel']);
+
+    // API маршруты для Cloudflare туннелей
+    $app->router->get('/api/cloudflare/tunnels', [NetworkController::class, 'getCloudflareTunnels']);
+    $app->router->post('/api/cloudflare/tunnel/create', [NetworkController::class, 'createCloudflareTunnel']);
+    $app->router->post('/api/cloudflare/tunnel/{id}/start', [NetworkController::class, 'startCloudflareTunnel']);
+    $app->router->post('/api/cloudflare/tunnel/{id}/stop', [NetworkController::class, 'stopCloudflareTunnel']);
+    $app->router->delete('/api/cloudflare/tunnel/{id}', [NetworkController::class, 'deleteCloudflareTunnel']);
+
+    // API маршруты для проброса портов
+    $app->router->get('/api/port-forwarding/rules', [NetworkController::class, 'getPortForwardingRules']);
+    $app->router->post('/api/port-forwarding/rule/add', [NetworkController::class, 'addPortForwardingRule']);
+    $app->router->delete('/api/port-forwarding/rule/{id}', [NetworkController::class, 'deletePortForwardingRule']);
+
     // Запускаем приложение
     $app->run();
 

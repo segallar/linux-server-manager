@@ -322,4 +322,380 @@ class NetworkController extends Controller
             ]);
         }
     }
+
+    // ==================== SSH TUNNELS API METHODS ====================
+
+    /**
+     * API: Получить список SSH туннелей
+     */
+    public function getSSHTunnels()
+    {
+        try {
+            $networkService = new NetworkService();
+            $tunnels = $networkService->getSSHTunnels();
+            
+            return $this->json([
+                'success' => true,
+                'data' => $tunnels
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка получения SSH туннелей: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Создать SSH туннель
+     */
+    public function createSSHTunnel()
+    {
+        try {
+            $host = $this->request->post('host');
+            $port = $this->request->post('port', 22);
+            $username = $this->request->post('username');
+            $localPort = $this->request->post('local_port');
+            $remotePort = $this->request->post('remote_port');
+            $name = $this->request->post('name');
+            
+            if (!$host || !$username || !$localPort || !$remotePort || !$name) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не все обязательные параметры указаны'
+                ]);
+            }
+
+            $networkService = new NetworkService();
+            $result = $networkService->createSSHTunnel($name, $host, $port, $username, $localPort, $remotePort);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'data' => $result['data'] ?? null
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка создания SSH туннеля: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Запустить SSH туннель
+     */
+    public function startSSHTunnel()
+    {
+        try {
+            $tunnelId = $this->request->get('id');
+            if (!$tunnelId) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указан ID туннеля'
+                ]);
+            }
+
+            $networkService = new NetworkService();
+            $result = $networkService->startSSHTunnel($tunnelId);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка запуска SSH туннеля: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Остановить SSH туннель
+     */
+    public function stopSSHTunnel()
+    {
+        try {
+            $tunnelId = $this->request->get('id');
+            if (!$tunnelId) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указан ID туннеля'
+                ]);
+            }
+
+            $networkService = new NetworkService();
+            $result = $networkService->stopSSHTunnel($tunnelId);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка остановки SSH туннеля: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Удалить SSH туннель
+     */
+    public function deleteSSHTunnel()
+    {
+        try {
+            $tunnelId = $this->request->get('id');
+            if (!$tunnelId) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указан ID туннеля'
+                ]);
+            }
+
+            $networkService = new NetworkService();
+            $result = $networkService->deleteSSHTunnel($tunnelId);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка удаления SSH туннеля: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // ==================== CLOUDFLARE TUNNELS API METHODS ====================
+
+    /**
+     * API: Получить список Cloudflare туннелей
+     */
+    public function getCloudflareTunnels()
+    {
+        try {
+            $cloudflareService = new CloudflareService();
+            $tunnels = $cloudflareService->getTunnels();
+            
+            return $this->json([
+                'success' => true,
+                'data' => $tunnels
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка получения Cloudflare туннелей: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Создать Cloudflare туннель
+     */
+    public function createCloudflareTunnel()
+    {
+        try {
+            $name = $this->request->post('name');
+            $url = $this->request->post('url');
+            $protocol = $this->request->post('protocol', 'http');
+            
+            if (!$name || !$url) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не все обязательные параметры указаны'
+                ]);
+            }
+
+            $cloudflareService = new CloudflareService();
+            $result = $cloudflareService->createTunnel($name, $url, $protocol);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'data' => $result['data'] ?? null
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка создания Cloudflare туннеля: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Запустить Cloudflare туннель
+     */
+    public function startCloudflareTunnel()
+    {
+        try {
+            $tunnelId = $this->request->get('id');
+            if (!$tunnelId) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указан ID туннеля'
+                ]);
+            }
+
+            $cloudflareService = new CloudflareService();
+            $result = $cloudflareService->startTunnel($tunnelId);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка запуска Cloudflare туннеля: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Остановить Cloudflare туннель
+     */
+    public function stopCloudflareTunnel()
+    {
+        try {
+            $tunnelId = $this->request->get('id');
+            if (!$tunnelId) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указан ID туннеля'
+                ]);
+            }
+
+            $cloudflareService = new CloudflareService();
+            $result = $cloudflareService->stopTunnel($tunnelId);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка остановки Cloudflare туннеля: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Удалить Cloudflare туннель
+     */
+    public function deleteCloudflareTunnel()
+    {
+        try {
+            $tunnelId = $this->request->get('id');
+            if (!$tunnelId) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указан ID туннеля'
+                ]);
+            }
+
+            $cloudflareService = new CloudflareService();
+            $result = $cloudflareService->deleteTunnel($tunnelId);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка удаления Cloudflare туннеля: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // ==================== PORT FORWARDING API METHODS ====================
+
+    /**
+     * API: Получить правила проброса портов
+     */
+    public function getPortForwardingRules()
+    {
+        try {
+            $networkService = new NetworkService();
+            $rules = $networkService->getPortForwardingRules();
+            
+            return $this->json([
+                'success' => true,
+                'data' => $rules
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка получения правил проброса портов: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Добавить правило проброса портов
+     */
+    public function addPortForwardingRule()
+    {
+        try {
+            $name = $this->request->post('name');
+            $externalPort = $this->request->post('external_port');
+            $internalPort = $this->request->post('internal_port');
+            $protocol = $this->request->post('protocol', 'tcp');
+            $targetIp = $this->request->post('target_ip', '127.0.0.1');
+            
+            if (!$name || !$externalPort || !$internalPort) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не все обязательные параметры указаны'
+                ]);
+            }
+
+            $networkService = new NetworkService();
+            $result = $networkService->addPortForwardingRule($name, $externalPort, $internalPort, $protocol, $targetIp);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'data' => $result['data'] ?? null
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка добавления правила проброса портов: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Удалить правило проброса портов
+     */
+    public function deletePortForwardingRule()
+    {
+        try {
+            $ruleId = $this->request->get('id');
+            if (!$ruleId) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Не указан ID правила'
+                ]);
+            }
+
+            $networkService = new NetworkService();
+            $result = $networkService->deletePortForwardingRule($ruleId);
+            
+            return $this->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ошибка удаления правила проброса портов: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

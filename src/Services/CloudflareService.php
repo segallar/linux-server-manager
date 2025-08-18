@@ -241,68 +241,6 @@ class CloudflareService
     }
 
     /**
-     * Создать новый туннель
-     */
-    public function createTunnel(string $name): array
-    {
-        if (!$this->isInstalled()) {
-            return ['success' => false, 'error' => 'cloudflared не установлен'];
-        }
-
-        $cloudflaredPath = $this->getCloudflaredPath();
-        $output = shell_exec("$cloudflaredPath tunnel create $name 2>&1");
-        
-        if (strpos($output, 'Created tunnel') !== false) {
-            return ['success' => true, 'message' => "Туннель $name создан"];
-        }
-
-        return ['success' => false, 'error' => $output];
-    }
-
-    /**
-     * Удалить туннель
-     */
-    public function deleteTunnel(string $tunnelId): array
-    {
-        if (!$this->isInstalled()) {
-            return ['success' => false, 'error' => 'cloudflared не установлен'];
-        }
-
-        $cloudflaredPath = $this->getCloudflaredPath();
-        $output = shell_exec("$cloudflaredPath tunnel delete $tunnelId 2>&1");
-        
-        if (strpos($output, 'Deleted tunnel') !== false) {
-            return ['success' => true, 'message' => "Туннель удален"];
-        }
-
-        return ['success' => false, 'error' => $output];
-    }
-
-    /**
-     * Запустить туннель
-     */
-    public function runTunnel(string $tunnelId, ?string $configPath = null): array
-    {
-        if (!$this->isInstalled()) {
-            return ['success' => false, 'error' => 'cloudflared не установлен'];
-        }
-
-        $cloudflaredPath = $this->getCloudflaredPath();
-        $command = "$cloudflaredPath tunnel run $tunnelId";
-        if ($configPath) {
-            $command .= " --config $configPath";
-        }
-
-        $output = shell_exec("$command 2>&1");
-        
-        if (strpos($output, 'error') === false) {
-            return ['success' => true, 'message' => "Туннель запущен"];
-        }
-
-        return ['success' => false, 'error' => $output];
-    }
-
-    /**
      * Получить конфигурацию туннеля
      */
     public function getTunnelConfig(string $tunnelId): string
@@ -355,5 +293,268 @@ class CloudflareService
         }
 
         return date('d.m.Y H:i', $timestamp);
+    }
+
+    // ==================== TUNNEL MANAGEMENT METHODS ====================
+
+    /**
+     * Создать Cloudflare туннель
+     */
+    public function createTunnel(string $name, string $url, string $protocol = 'http'): array
+    {
+        try {
+            if (!$this->isInstalled()) {
+                return ['success' => false, 'message' => 'Cloudflared не установлен'];
+            }
+
+            if (!$this->isAuthenticated()) {
+                return ['success' => false, 'message' => 'Cloudflared не авторизован'];
+            }
+
+            $cloudflaredPath = $this->getCloudflaredPath();
+            
+            // Создаем туннель
+            $command = "$cloudflaredPath tunnel create $name 2>&1";
+            $output = shell_exec($command);
+            
+            if (strpos($output, 'Created tunnel') !== false) {
+                // Получаем ID туннеля
+                preg_match('/Created tunnel ([a-f0-9-]+)/', $output, $matches);
+                $tunnelId = $matches[1] ?? '';
+                
+                if ($tunnelId) {
+                    // Создаем конфигурацию туннеля
+                    $configResult = $this->createTunnelConfig($tunnelId, $name, $url, $protocol);
+                    
+                    if ($configResult['success']) {
+                        return [
+                            'success' => true,
+                            'message' => "Туннель '$name' создан успешно",
+                            'data' => [
+                                'id' => $tunnelId,
+                                'name' => $name,
+                                'url' => $url
+                            ]
+                        ];
+                    } else {
+                        return $configResult;
+                    }
+                }
+            }
+            
+            return [
+                'success' => false,
+                'message' => 'Ошибка создания туннеля: ' . $output
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка создания туннеля: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Запустить Cloudflare туннель
+     */
+    public function startTunnel(string $tunnelId): array
+    {
+        try {
+            if (!$this->isInstalled()) {
+                return ['success' => false, 'message' => 'Cloudflared не установлен'];
+            }
+
+            $cloudflaredPath = $this->getCloudflaredPath();
+            
+            // Проверяем, существует ли туннель
+            $tunnels = $this->getTunnels();
+            $tunnelExists = false;
+            $tunnelName = '';
+            
+            foreach ($tunnels as $tunnel) {
+                if ($tunnel['id'] === $tunnelId) {
+                    $tunnelExists = true;
+                    $tunnelName = $tunnel['name'];
+                    break;
+                }
+            }
+            
+            if (!$tunnelExists) {
+                return ['success' => false, 'message' => 'Туннель не найден'];
+            }
+            
+            // Запускаем туннель в фоне
+            $command = "$cloudflaredPath tunnel run $tunnelId > /dev/null 2>&1 &";
+            shell_exec($command);
+            
+            // Проверяем, что туннель запустился
+            sleep(2);
+            $isRunning = $this->isTunnelRunning($tunnelId);
+            
+            if ($isRunning) {
+                return [
+                    'success' => true,
+                    'message' => "Туннель '$tunnelName' запущен"
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Ошибка запуска туннеля'
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка запуска туннеля: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Остановить Cloudflare туннель
+     */
+    public function stopTunnel(string $tunnelId): array
+    {
+        try {
+            if (!$this->isInstalled()) {
+                return ['success' => false, 'message' => 'Cloudflared не установлен'];
+            }
+
+            // Проверяем, существует ли туннель
+            $tunnels = $this->getTunnels();
+            $tunnelExists = false;
+            $tunnelName = '';
+            
+            foreach ($tunnels as $tunnel) {
+                if ($tunnel['id'] === $tunnelId) {
+                    $tunnelExists = true;
+                    $tunnelName = $tunnel['name'];
+                    break;
+                }
+            }
+            
+            if (!$tunnelExists) {
+                return ['success' => false, 'message' => 'Туннель не найден'];
+            }
+            
+            // Останавливаем процессы туннеля
+            $command = "pkill -f 'cloudflared.*tunnel.*run.*$tunnelId'";
+            shell_exec($command);
+            
+            return [
+                'success' => true,
+                'message' => "Туннель '$tunnelName' остановлен"
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка остановки туннеля: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Удалить Cloudflare туннель
+     */
+    public function deleteTunnel(string $tunnelId): array
+    {
+        try {
+            if (!$this->isInstalled()) {
+                return ['success' => false, 'message' => 'Cloudflared не установлен'];
+            }
+
+            // Проверяем, существует ли туннель
+            $tunnels = $this->getTunnels();
+            $tunnelExists = false;
+            $tunnelName = '';
+            
+            foreach ($tunnels as $tunnel) {
+                if ($tunnel['id'] === $tunnelId) {
+                    $tunnelExists = true;
+                    $tunnelName = $tunnel['name'];
+                    break;
+                }
+            }
+            
+            if (!$tunnelExists) {
+                return ['success' => false, 'message' => 'Туннель не найден'];
+            }
+
+            $cloudflaredPath = $this->getCloudflaredPath();
+            
+            // Сначала останавливаем туннель
+            $this->stopTunnel($tunnelId);
+            
+            // Удаляем туннель
+            $command = "$cloudflaredPath tunnel delete $tunnelId 2>&1";
+            $output = shell_exec($command);
+            
+            if (strpos($output, 'Deleted tunnel') !== false || strpos($output, 'tunnel deleted') !== false) {
+                return [
+                    'success' => true,
+                    'message' => "Туннель '$tunnelName' удален"
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Ошибка удаления туннеля: ' . $output
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка удаления туннеля: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Создать конфигурацию туннеля
+     */
+    private function createTunnelConfig(string $tunnelId, string $name, string $url, string $protocol): array
+    {
+        try {
+            $configDir = "/etc/cloudflared";
+            $configFile = "$configDir/$tunnelId.yml";
+            
+            // Создаем директорию если не существует
+            if (!is_dir($configDir)) {
+                mkdir($configDir, 0755, true);
+            }
+            
+            // Создаем конфигурацию
+            $config = [
+                'tunnel' => $tunnelId,
+                'credentials-file' => "/etc/cloudflared/$tunnelId.json",
+                'ingress' => [
+                    [
+                        'hostname' => "$name.your-domain.com",
+                        'service' => "$protocol://$url"
+                    ],
+                    [
+                        'service' => 'http_status:404'
+                    ]
+                ]
+            ];
+            
+            $yaml = yaml_emit($config);
+            if (file_put_contents($configFile, $yaml) === false) {
+                return ['success' => false, 'message' => 'Ошибка создания конфигурации'];
+            }
+            
+            return ['success' => true, 'message' => 'Конфигурация создана'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Ошибка создания конфигурации: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Проверить, запущен ли туннель
+     */
+    private function isTunnelRunning(string $tunnelId): bool
+    {
+        $command = "pgrep -f 'cloudflared.*tunnel.*run.*$tunnelId'";
+        $output = shell_exec($command);
+        return !empty($output);
     }
 }

@@ -347,4 +347,480 @@ class NetworkService
             'tx_dropped' => (int)$data[7]
         ];
     }
+
+    // ==================== SSH TUNNELS METHODS ====================
+
+    /**
+     * Получить список SSH туннелей
+     */
+    public function getSSHTunnels(): array
+    {
+        $tunnels = [];
+        $configFile = '/etc/ssh-tunnels.conf';
+        
+        if (file_exists($configFile)) {
+            $config = parse_ini_file($configFile, true);
+            foreach ($config as $id => $tunnel) {
+                $tunnels[] = [
+                    'id' => $id,
+                    'name' => $tunnel['name'] ?? $id,
+                    'host' => $tunnel['host'] ?? '',
+                    'port' => $tunnel['port'] ?? 22,
+                    'username' => $tunnel['username'] ?? '',
+                    'local_port' => $tunnel['local_port'] ?? '',
+                    'remote_port' => $tunnel['remote_port'] ?? '',
+                    'status' => $this->getSSHTunnelStatus($id),
+                    'created' => $tunnel['created'] ?? '',
+                    'last_used' => $tunnel['last_used'] ?? ''
+                ];
+            }
+        }
+        
+        return $tunnels;
+    }
+
+    /**
+     * Создать SSH туннель
+     */
+    public function createSSHTunnel(string $name, string $host, int $port, string $username, int $localPort, int $remotePort): array
+    {
+        try {
+            $id = 'tunnel_' . time() . '_' . rand(1000, 9999);
+            $configFile = '/etc/ssh-tunnels.conf';
+            
+            // Создаем конфигурацию туннеля
+            $config = [
+                'name' => $name,
+                'host' => $host,
+                'port' => $port,
+                'username' => $username,
+                'local_port' => $localPort,
+                'remote_port' => $remotePort,
+                'created' => date('Y-m-d H:i:s'),
+                'last_used' => ''
+            ];
+            
+            // Читаем существующую конфигурацию
+            $existingConfig = [];
+            if (file_exists($configFile)) {
+                $existingConfig = parse_ini_file($configFile, true);
+            }
+            
+            // Добавляем новый туннель
+            $existingConfig[$id] = $config;
+            
+            // Записываем конфигурацию
+            $this->writeIniFile($configFile, $existingConfig);
+            
+            return [
+                'success' => true,
+                'message' => "SSH туннель '$name' создан успешно",
+                'data' => ['id' => $id]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка создания SSH туннеля: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Запустить SSH туннель
+     */
+    public function startSSHTunnel(string $tunnelId): array
+    {
+        try {
+            $configFile = '/etc/ssh-tunnels.conf';
+            
+            if (!file_exists($configFile)) {
+                return ['success' => false, 'message' => 'Файл конфигурации не найден'];
+            }
+            
+            $config = parse_ini_file($configFile, true);
+            if (!isset($config[$tunnelId])) {
+                return ['success' => false, 'message' => 'Туннель не найден'];
+            }
+            
+            $tunnel = $config[$tunnelId];
+            
+            // Формируем команду SSH туннеля
+            $command = sprintf(
+                'ssh -f -N -L %d:localhost:%d %s@%s -p %d',
+                $tunnel['local_port'],
+                $tunnel['remote_port'],
+                $tunnel['username'],
+                $tunnel['host'],
+                $tunnel['port']
+            );
+            
+            // Запускаем туннель
+            $output = shell_exec($command . ' 2>&1');
+            $exitCode = $this->getLastExitCode();
+            
+            if ($exitCode === 0) {
+                // Обновляем время последнего использования
+                $config[$tunnelId]['last_used'] = date('Y-m-d H:i:s');
+                $this->writeIniFile($configFile, $config);
+                
+                return [
+                    'success' => true,
+                    'message' => "SSH туннель '{$tunnel['name']}' запущен"
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Ошибка запуска SSH туннеля: ' . $output
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка запуска SSH туннеля: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Остановить SSH туннель
+     */
+    public function stopSSHTunnel(string $tunnelId): array
+    {
+        try {
+            $configFile = '/etc/ssh-tunnels.conf';
+            
+            if (!file_exists($configFile)) {
+                return ['success' => false, 'message' => 'Файл конфигурации не найден'];
+            }
+            
+            $config = parse_ini_file($configFile, true);
+            if (!isset($config[$tunnelId])) {
+                return ['success' => false, 'message' => 'Туннель не найден'];
+            }
+            
+            $tunnel = $config[$tunnelId];
+            
+            // Ищем и останавливаем процессы SSH туннеля
+            $command = sprintf(
+                'pkill -f "ssh.*-L %d:localhost:%d.*%s@%s"',
+                $tunnel['local_port'],
+                $tunnel['remote_port'],
+                $tunnel['username'],
+                $tunnel['host']
+            );
+            
+            shell_exec($command);
+            
+            return [
+                'success' => true,
+                'message' => "SSH туннель '{$tunnel['name']}' остановлен"
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка остановки SSH туннеля: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Удалить SSH туннель
+     */
+    public function deleteSSHTunnel(string $tunnelId): array
+    {
+        try {
+            $configFile = '/etc/ssh-tunnels.conf';
+            
+            if (!file_exists($configFile)) {
+                return ['success' => false, 'message' => 'Файл конфигурации не найден'];
+            }
+            
+            $config = parse_ini_file($configFile, true);
+            if (!isset($config[$tunnelId])) {
+                return ['success' => false, 'message' => 'Туннель не найден'];
+            }
+            
+            $tunnel = $config[$tunnelId];
+            
+            // Сначала останавливаем туннель
+            $this->stopSSHTunnel($tunnelId);
+            
+            // Удаляем из конфигурации
+            unset($config[$tunnelId]);
+            $this->writeIniFile($configFile, $config);
+            
+            return [
+                'success' => true,
+                'message' => "SSH туннель '{$tunnel['name']}' удален"
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка удаления SSH туннеля: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Получить статус SSH туннеля
+     */
+    private function getSSHTunnelStatus(string $tunnelId): string
+    {
+        $configFile = '/etc/ssh-tunnels.conf';
+        
+        if (!file_exists($configFile)) {
+            return 'unknown';
+        }
+        
+        $config = parse_ini_file($configFile, true);
+        if (!isset($config[$tunnelId])) {
+            return 'unknown';
+        }
+        
+        $tunnel = $config[$tunnelId];
+        
+        // Проверяем, есть ли активные процессы SSH туннеля
+        $command = sprintf(
+            'pgrep -f "ssh.*-L %d:localhost:%d.*%s@%s"',
+            $tunnel['local_port'],
+            $tunnel['remote_port'],
+            $tunnel['username'],
+            $tunnel['host']
+        );
+        
+        $output = shell_exec($command);
+        return $output ? 'running' : 'stopped';
+    }
+
+    /**
+     * Записать INI файл
+     */
+    private function writeIniFile(string $filename, array $data): bool
+    {
+        $content = '';
+        
+        foreach ($data as $section => $values) {
+            $content .= "[$section]\n";
+            foreach ($values as $key => $value) {
+                $content .= "$key = \"$value\"\n";
+            }
+            $content .= "\n";
+        }
+        
+        return file_put_contents($filename, $content) !== false;
+    }
+
+    /**
+     * Получить код последнего выхода
+     */
+    private function getLastExitCode(): int
+    {
+        return $this->isWindows() ? 0 : (int)shell_exec('echo $?');
+    }
+
+    /**
+     * Проверить, является ли система Windows
+     */
+    private function isWindows(): bool
+    {
+        return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+    }
+
+    // ==================== PORT FORWARDING METHODS ====================
+
+    /**
+     * Получить правила проброса портов
+     */
+    public function getPortForwardingRules(): array
+    {
+        $rules = [];
+        $configFile = '/etc/port-forwarding.conf';
+        
+        if (file_exists($configFile)) {
+            $config = parse_ini_file($configFile, true);
+            foreach ($config as $id => $rule) {
+                $rules[] = [
+                    'id' => $id,
+                    'name' => $rule['name'] ?? $id,
+                    'external_port' => $rule['external_port'] ?? '',
+                    'internal_port' => $rule['internal_port'] ?? '',
+                    'protocol' => $rule['protocol'] ?? 'tcp',
+                    'target_ip' => $rule['target_ip'] ?? '127.0.0.1',
+                    'status' => $this->getPortForwardingStatus($id),
+                    'created' => $rule['created'] ?? '',
+                    'last_used' => $rule['last_used'] ?? ''
+                ];
+            }
+        }
+        
+        return $rules;
+    }
+
+    /**
+     * Добавить правило проброса портов
+     */
+    public function addPortForwardingRule(string $name, int $externalPort, int $internalPort, string $protocol = 'tcp', string $targetIp = '127.0.0.1'): array
+    {
+        try {
+            $id = 'rule_' . time() . '_' . rand(1000, 9999);
+            $configFile = '/etc/port-forwarding.conf';
+            
+            // Создаем конфигурацию правила
+            $config = [
+                'name' => $name,
+                'external_port' => $externalPort,
+                'internal_port' => $internalPort,
+                'protocol' => $protocol,
+                'target_ip' => $targetIp,
+                'created' => date('Y-m-d H:i:s'),
+                'last_used' => ''
+            ];
+            
+            // Читаем существующую конфигурацию
+            $existingConfig = [];
+            if (file_exists($configFile)) {
+                $existingConfig = parse_ini_file($configFile, true);
+            }
+            
+            // Добавляем новое правило
+            $existingConfig[$id] = $config;
+            
+            // Записываем конфигурацию
+            $this->writeIniFile($configFile, $existingConfig);
+            
+            // Применяем правило через iptables
+            $this->applyPortForwardingRule($config);
+            
+            return [
+                'success' => true,
+                'message' => "Правило проброса портов '$name' добавлено успешно",
+                'data' => ['id' => $id]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка добавления правила проброса портов: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Удалить правило проброса портов
+     */
+    public function deletePortForwardingRule(string $ruleId): array
+    {
+        try {
+            $configFile = '/etc/port-forwarding.conf';
+            
+            if (!file_exists($configFile)) {
+                return ['success' => false, 'message' => 'Файл конфигурации не найден'];
+            }
+            
+            $config = parse_ini_file($configFile, true);
+            if (!isset($config[$ruleId])) {
+                return ['success' => false, 'message' => 'Правило не найдено'];
+            }
+            
+            $rule = $config[$ruleId];
+            
+            // Удаляем правило из iptables
+            $this->removePortForwardingRule($rule);
+            
+            // Удаляем из конфигурации
+            unset($config[$ruleId]);
+            $this->writeIniFile($configFile, $config);
+            
+            return [
+                'success' => true,
+                'message' => "Правило проброса портов '{$rule['name']}' удалено"
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка удаления правила проброса портов: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Применить правило проброса портов через iptables
+     */
+    private function applyPortForwardingRule(array $rule): bool
+    {
+        $externalPort = $rule['external_port'];
+        $internalPort = $rule['internal_port'];
+        $protocol = $rule['protocol'];
+        $targetIp = $rule['target_ip'];
+        
+        // Команды iptables для проброса портов
+        $commands = [
+            // Разрешаем входящие соединения
+            "iptables -A INPUT -p $protocol --dport $externalPort -j ACCEPT",
+            // Перенаправляем трафик
+            "iptables -t nat -A PREROUTING -p $protocol --dport $externalPort -j DNAT --to-destination $targetIp:$internalPort",
+            // Разрешаем исходящие соединения
+            "iptables -A OUTPUT -p $protocol --sport $internalPort -j ACCEPT"
+        ];
+        
+        foreach ($commands as $command) {
+            shell_exec($command . ' 2>/dev/null');
+        }
+        
+        return true;
+    }
+
+    /**
+     * Удалить правило проброса портов из iptables
+     */
+    private function removePortForwardingRule(array $rule): bool
+    {
+        $externalPort = $rule['external_port'];
+        $internalPort = $rule['internal_port'];
+        $protocol = $rule['protocol'];
+        $targetIp = $rule['target_ip'];
+        
+        // Команды iptables для удаления правил
+        $commands = [
+            // Удаляем входящие соединения
+            "iptables -D INPUT -p $protocol --dport $externalPort -j ACCEPT 2>/dev/null",
+            // Удаляем перенаправление
+            "iptables -t nat -D PREROUTING -p $protocol --dport $externalPort -j DNAT --to-destination $targetIp:$internalPort 2>/dev/null",
+            // Удаляем исходящие соединения
+            "iptables -D OUTPUT -p $protocol --sport $internalPort -j ACCEPT 2>/dev/null"
+        ];
+        
+        foreach ($commands as $command) {
+            shell_exec($command);
+        }
+        
+        return true;
+    }
+
+    /**
+     * Получить статус правила проброса портов
+     */
+    private function getPortForwardingStatus(string $ruleId): string
+    {
+        $configFile = '/etc/port-forwarding.conf';
+        
+        if (!file_exists($configFile)) {
+            return 'unknown';
+        }
+        
+        $config = parse_ini_file($configFile, true);
+        if (!isset($config[$ruleId])) {
+            return 'unknown';
+        }
+        
+        $rule = $config[$ruleId];
+        
+        // Проверяем, есть ли правило в iptables
+        $command = sprintf(
+            'iptables -t nat -L PREROUTING -n | grep "dpt:%d"',
+            $rule['external_port']
+        );
+        
+        $output = shell_exec($command);
+        return $output ? 'active' : 'inactive';
+    }
 }
