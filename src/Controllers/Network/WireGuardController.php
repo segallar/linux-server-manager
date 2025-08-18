@@ -3,7 +3,7 @@
 namespace App\Controllers\Network;
 
 use App\Core\Controller;
-use App\Services\WireGuardService;
+use App\Services\WireGuard\WireGuardService;
 
 class WireGuardController extends Controller
 {

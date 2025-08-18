@@ -3,7 +3,7 @@
 namespace App\Controllers\Network;
 
 use App\Core\Controller;
-use App\Services\CloudflareService;
+use App\Services\Cloudflare\CloudflareService;
 
 class CloudflareController extends Controller
 {
