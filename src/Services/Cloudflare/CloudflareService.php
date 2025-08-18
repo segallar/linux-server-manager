@@ -175,7 +175,9 @@ class CloudflareService extends BaseService implements CloudflareServiceInterfac
             'name' => $name,
             'status' => $status,
             'created' => $created,
-            'created_formatted' => $this->formatCreatedTime($created)
+            'created_formatted' => $this->formatCreatedTime($created),
+            'connections' => [],
+            'routes' => []
         ];
     }
 
