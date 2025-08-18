@@ -280,8 +280,14 @@ class SystemService extends BaseService implements SystemServiceInterface
                     'ip' => ''
                 ];
                 $interfaces[] = $currentInterface;
+                
+                // Проверяем состояние в той же строке
+                if (strpos($line, 'state UP') !== false || strpos($line, 'state UNKNOWN') !== false) {
+                    $currentInterface['status'] = 'up';
+                }
             }
             
+            // Проверяем состояние на отдельной строке (для совместимости)
             if ($currentInterface && (strpos($line, 'state UP') !== false || strpos($line, 'state UNKNOWN') !== false)) {
                 $currentInterface['status'] = 'up';
             }
