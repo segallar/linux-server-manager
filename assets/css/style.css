@@ -29,6 +29,7 @@ body {
     font-weight: bold;
     font-size: 1.5rem;
     color: #fff !important;
+    margin-left: 1rem; /* Отступ от левого края */
 }
 
 .navbar-brand:hover {
@@ -54,6 +55,11 @@ body {
     color: #fff !important;
     background-color: #3498db;
     box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+/* Отступ для первой иконки в меню */
+.navbar-nav .nav-item:first-child .nav-link {
+    margin-left: 1rem; /* Дополнительный отступ для первой иконки */
 }
 
 /* Выпадающее меню */
@@ -184,6 +190,11 @@ body {
 @media (max-width: 768px) {
     .navbar-brand {
         font-size: 1.2rem;
+        margin-left: 0.5rem; /* Меньший отступ на мобильных */
+    }
+    
+    .navbar-nav .nav-item:first-child .nav-link {
+        margin-left: 0.5rem; /* Меньший отступ на мобильных */
     }
     
     .main-content {
