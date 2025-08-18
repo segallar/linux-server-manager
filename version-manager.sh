@@ -184,8 +184,8 @@ else
     esac
 fi
 
-# Проверяем, что новая версия не существует
-if git tag -l "$NEW_VERSION" | grep -q "$NEW_VERSION"; then
+# Проверяем, что новая версия не существует (только если создаем новый тег)
+if [ "$choice" = "1" ] && git tag -l "$NEW_VERSION" | grep -q "$NEW_VERSION"; then
     echo -e "${RED}❌ Тег $NEW_VERSION уже существует${NC}"
     exit 1
 fi
