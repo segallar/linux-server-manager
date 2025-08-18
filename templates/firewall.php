@@ -240,6 +240,12 @@
                                             $icon = 'fa-chart-line';
                                         } elseif (strpos($description, 'VPN') !== false) {
                                             $icon = 'fa-user-shield';
+                                        } elseif (strpos($description, 'AMQP') !== false || strpos($description, 'RabbitMQ') !== false) {
+                                            $icon = 'fa-rabbit';
+                                        } elseif (strpos($description, 'RIP') !== false) {
+                                            $icon = 'fa-route';
+                                        } elseif (strpos($description, 'Custom Service') !== false) {
+                                            $icon = 'fa-cog';
                                         }
                                         ?>
                                         <i class="fas <?= $icon ?> me-2"></i>
