@@ -1,0 +1,518 @@
+<?php
+
+namespace App\Services;
+
+class FirewallService
+{
+    private string $firewallType;
+    private string $configPath;
+    
+    public function __construct()
+    {
+        $this->detectFirewallType();
+    }
+    
+    /**
+     * Определяет тип файрвола (iptables или ufw)
+     */
+    private function detectFirewallType(): void
+    {
+        // Проверяем, установлен ли ufw
+        $ufwStatus = shell_exec('which ufw 2>/dev/null');
+        if ($ufwStatus) {
+            $this->firewallType = 'ufw';
+            $this->configPath = '/etc/ufw/';
+        } else {
+            $this->firewallType = 'iptables';
+            $this->configPath = '/etc/iptables/';
+        }
+    }
+    
+    /**
+     * Получает информацию о файрволе
+     */
+    public function getFirewallInfo(): array
+    {
+        $info = [
+            'type' => $this->firewallType,
+            'status' => $this->getStatus(),
+            'rules_count' => $this->getRulesCount(),
+            'default_policy' => $this->getDefaultPolicy(),
+            'active_connections' => $this->getActiveConnections(),
+            'blocked_attempts' => $this->getBlockedAttempts(),
+            'last_activity' => $this->getLastActivity()
+        ];
+        
+        return $info;
+    }
+    
+    /**
+     * Получает статус файрвола
+     */
+    public function getStatus(): string
+    {
+        if ($this->firewallType === 'ufw') {
+            $output = shell_exec('ufw status 2>/dev/null');
+            if (strpos($output, 'Status: active') !== false) {
+                return 'active';
+            } elseif (strpos($output, 'Status: inactive') !== false) {
+                return 'inactive';
+            }
+        } else {
+            // Для iptables проверяем наличие правил
+            $output = shell_exec('iptables -L 2>/dev/null | wc -l');
+            if ((int)$output > 3) { // Больше заголовков
+                return 'active';
+            }
+        }
+        
+        return 'inactive';
+    }
+    
+    /**
+     * Получает количество правил
+     */
+    public function getRulesCount(): array
+    {
+        $counts = [
+            'input' => 0,
+            'output' => 0,
+            'forward' => 0
+        ];
+        
+        if ($this->firewallType === 'ufw') {
+            $output = shell_exec('ufw status numbered 2>/dev/null');
+            $lines = explode("\n", $output);
+            
+            foreach ($lines as $line) {
+                if (strpos($line, 'ALLOW IN') !== false) {
+                    $counts['input']++;
+                } elseif (strpos($line, 'ALLOW OUT') !== false) {
+                    $counts['output']++;
+                }
+            }
+        } else {
+            // Для iptables
+            $input = shell_exec('iptables -L INPUT 2>/dev/null | wc -l');
+            $output = shell_exec('iptables -L OUTPUT 2>/dev/null | wc -l');
+            $forward = shell_exec('iptables -L FORWARD 2>/dev/null | wc -l');
+            
+            $counts['input'] = max(0, (int)$input - 2); // Вычитаем заголовки
+            $counts['output'] = max(0, (int)$output - 2);
+            $counts['forward'] = max(0, (int)$forward - 2);
+        }
+        
+        return $counts;
+    }
+    
+    /**
+     * Получает политику по умолчанию
+     */
+    public function getDefaultPolicy(): array
+    {
+        $policy = [
+            'input' => 'ACCEPT',
+            'output' => 'ACCEPT',
+            'forward' => 'ACCEPT'
+        ];
+        
+        if ($this->firewallType === 'ufw') {
+            $output = shell_exec('ufw status verbose 2>/dev/null');
+            if (preg_match('/Default:\s+(\w+)\s+\(incoming\)/', $output, $matches)) {
+                $policy['input'] = strtoupper($matches[1]);
+            }
+            if (preg_match('/Default:\s+(\w+)\s+\(outgoing\)/', $output, $matches)) {
+                $policy['output'] = strtoupper($matches[1]);
+            }
+        } else {
+            // Для iptables
+            $input = shell_exec('iptables -L INPUT --line-numbers 2>/dev/null | tail -1');
+            $output = shell_exec('iptables -L OUTPUT --line-numbers 2>/dev/null | tail -1');
+            $forward = shell_exec('iptables -L FORWARD --line-numbers 2>/dev/null | tail -1');
+            
+            if (preg_match('/\s+(\w+)\s*$/', $input, $matches)) {
+                $policy['input'] = strtoupper($matches[1]);
+            }
+            if (preg_match('/\s+(\w+)\s*$/', $output, $matches)) {
+                $policy['output'] = strtoupper($matches[1]);
+            }
+            if (preg_match('/\s+(\w+)\s*$/', $forward, $matches)) {
+                $policy['forward'] = strtoupper($matches[1]);
+            }
+        }
+        
+        return $policy;
+    }
+    
+    /**
+     * Получает активные соединения
+     */
+    public function getActiveConnections(): int
+    {
+        $output = shell_exec('netstat -an 2>/dev/null | grep ESTABLISHED | wc -l');
+        return (int)$output;
+    }
+    
+    /**
+     * Получает количество заблокированных попыток
+     */
+    public function getBlockedAttempts(): int
+    {
+        // Пытаемся получить из логов
+        $output = shell_exec('grep -c "DROP" /var/log/ufw.log 2>/dev/null || echo "0"');
+        return (int)$output;
+    }
+    
+    /**
+     * Получает время последней активности
+     */
+    public function getLastActivity(): string
+    {
+        $logFile = $this->firewallType === 'ufw' ? '/var/log/ufw.log' : '/var/log/iptables.log';
+        
+        if (file_exists($logFile)) {
+            $output = shell_exec("tail -1 $logFile 2>/dev/null | cut -d' ' -f1-3");
+            return $output ? trim($output) : 'Неизвестно';
+        }
+        
+        return 'Неизвестно';
+    }
+    
+    /**
+     * Получает список правил
+     */
+    public function getRules(): array
+    {
+        $rules = [];
+        
+        if ($this->firewallType === 'ufw') {
+            $output = shell_exec('ufw status numbered 2>/dev/null');
+            $lines = explode("\n", $output);
+            
+            foreach ($lines as $line) {
+                if (preg_match('/^\[(\d+)\]\s+(.+)$/', $line, $matches)) {
+                    $ruleText = $matches[2];
+                    $rules[] = [
+                        'id' => $matches[1],
+                        'action' => $this->parseUfwAction($ruleText),
+                        'protocol' => $this->parseUfwProtocol($ruleText),
+                        'port' => $this->parseUfwPort($ruleText),
+                        'source' => $this->parseUfwSource($ruleText),
+                        'description' => $this->parseUfwDescription($ruleText)
+                    ];
+                }
+            }
+        } else {
+            // Для iptables
+            $output = shell_exec('iptables -L --line-numbers 2>/dev/null');
+            $lines = explode("\n", $output);
+            $currentChain = '';
+            
+            foreach ($lines as $line) {
+                if (preg_match('/^Chain\s+(\w+)/', $line, $matches)) {
+                    $currentChain = $matches[1];
+                } elseif (preg_match('/^(\d+)\s+(.+)$/', $line, $matches)) {
+                    $ruleText = $matches[2];
+                    $rules[] = [
+                        'id' => $matches[1],
+                        'chain' => $currentChain,
+                        'action' => $this->parseIptablesAction($ruleText),
+                        'protocol' => $this->parseIptablesProtocol($ruleText),
+                        'port' => $this->parseIptablesPort($ruleText),
+                        'source' => $this->parseIptablesSource($ruleText),
+                        'target' => $this->parseIptablesTarget($ruleText)
+                    ];
+                }
+            }
+        }
+        
+        return $rules;
+    }
+    
+    /**
+     * Добавляет новое правило
+     */
+    public function addRule(array $rule): array
+    {
+        try {
+            if ($this->firewallType === 'ufw') {
+                return $this->addUfwRule($rule);
+            } else {
+                return $this->addIptablesRule($rule);
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка добавления правила: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Удаляет правило
+     */
+    public function deleteRule(string $id): array
+    {
+        try {
+            if ($this->firewallType === 'ufw') {
+                $command = "echo 'y' | ufw delete $id 2>&1";
+            } else {
+                $command = "iptables -D INPUT $id 2>&1";
+            }
+            
+            $output = shell_exec($command);
+            
+            if (strpos($output, 'error') !== false || strpos($output, 'Error') !== false) {
+                return [
+                    'success' => false,
+                    'message' => 'Ошибка удаления правила: ' . $output
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Правило успешно удалено'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка удаления правила: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Включает файрвол
+     */
+    public function enable(): array
+    {
+        try {
+            if ($this->firewallType === 'ufw') {
+                $command = "echo 'y' | ufw enable 2>&1";
+            } else {
+                $command = "iptables -P INPUT DROP && iptables -P FORWARD DROP && iptables -A INPUT -i lo -j ACCEPT && iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT 2>&1";
+            }
+            
+            $output = shell_exec($command);
+            
+            if (strpos($output, 'error') !== false || strpos($output, 'Error') !== false) {
+                return [
+                    'success' => false,
+                    'message' => 'Ошибка включения файрвола: ' . $output
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Файрвол успешно включен'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка включения файрвола: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Выключает файрвол
+     */
+    public function disable(): array
+    {
+        try {
+            if ($this->firewallType === 'ufw') {
+                $command = "echo 'y' | ufw disable 2>&1";
+            } else {
+                $command = "iptables -F && iptables -P INPUT ACCEPT && iptables -P FORWARD ACCEPT && iptables -P OUTPUT ACCEPT 2>&1";
+            }
+            
+            $output = shell_exec($command);
+            
+            if (strpos($output, 'error') !== false || strpos($output, 'Error') !== false) {
+                return [
+                    'success' => false,
+                    'message' => 'Ошибка выключения файрвола: ' . $output
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Файрвол успешно выключен'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Ошибка выключения файрвола: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Получает статистику файрвола
+     */
+    public function getStats(): array
+    {
+        $stats = [
+            'type' => $this->firewallType,
+            'status' => $this->getStatus(),
+            'rules_count' => $this->getRulesCount(),
+            'total_rules' => array_sum($this->getRulesCount()),
+            'active_connections' => $this->getActiveConnections(),
+            'blocked_attempts' => $this->getBlockedAttempts(),
+            'last_activity' => $this->getLastActivity(),
+            'default_policy' => $this->getDefaultPolicy()
+        ];
+        
+        return $stats;
+    }
+    
+    // Вспомогательные методы для парсинга правил UFW
+    private function parseUfwAction(string $ruleText): string
+    {
+        if (strpos($ruleText, 'ALLOW') !== false) return 'ALLOW';
+        if (strpos($ruleText, 'DENY') !== false) return 'DENY';
+        if (strpos($ruleText, 'REJECT') !== false) return 'REJECT';
+        return 'UNKNOWN';
+    }
+    
+    private function parseUfwProtocol(string $ruleText): string
+    {
+        if (strpos($ruleText, 'tcp') !== false) return 'tcp';
+        if (strpos($ruleText, 'udp') !== false) return 'udp';
+        return 'any';
+    }
+    
+    private function parseUfwPort(string $ruleText): string
+    {
+        if (preg_match('/port\s+(\d+)/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        return 'any';
+    }
+    
+    private function parseUfwSource(string $ruleText): string
+    {
+        if (preg_match('/from\s+([^\s]+)/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        return 'any';
+    }
+    
+    private function parseUfwDescription(string $ruleText): string
+    {
+        if (preg_match('/#\s*(.+)$/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        return '';
+    }
+    
+    // Вспомогательные методы для парсинга правил iptables
+    private function parseIptablesAction(string $ruleText): string
+    {
+        if (preg_match('/\s+(\w+)\s*$/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        return 'UNKNOWN';
+    }
+    
+    private function parseIptablesProtocol(string $ruleText): string
+    {
+        if (preg_match('/-p\s+(\w+)/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        return 'any';
+    }
+    
+    private function parseIptablesPort(string $ruleText): string
+    {
+        if (preg_match('/--dport\s+(\d+)/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        return 'any';
+    }
+    
+    private function parseIptablesSource(string $ruleText): string
+    {
+        if (preg_match('/-s\s+([^\s]+)/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        return 'any';
+    }
+    
+    private function parseIptablesTarget(string $ruleText): string
+    {
+        if (preg_match('/-j\s+(\w+)/', $ruleText, $matches)) {
+            return $matches[1];
+        }
+        return 'UNKNOWN';
+    }
+    
+    // Методы для добавления правил
+    private function addUfwRule(array $rule): array
+    {
+        $command = "ufw ";
+        
+        if ($rule['action'] === 'ALLOW') {
+            $command .= "allow ";
+        } elseif ($rule['action'] === 'DENY') {
+            $command .= "deny ";
+        } else {
+            return ['success' => false, 'message' => 'Неподдерживаемое действие'];
+        }
+        
+        if (!empty($rule['port']) && $rule['port'] !== 'any') {
+            $command .= $rule['port'];
+        }
+        
+        if (!empty($rule['protocol']) && $rule['protocol'] !== 'any') {
+            $command .= "/" . $rule['protocol'];
+        }
+        
+        if (!empty($rule['source']) && $rule['source'] !== 'any') {
+            $command .= " from " . $rule['source'];
+        }
+        
+        if (!empty($rule['description'])) {
+            $command .= " comment '" . $rule['description'] . "'";
+        }
+        
+        $command .= " 2>&1";
+        $output = shell_exec($command);
+        
+        if (strpos($output, 'error') !== false || strpos($output, 'Error') !== false) {
+            return ['success' => false, 'message' => 'Ошибка добавления правила: ' . $output];
+        }
+        
+        return ['success' => true, 'message' => 'Правило успешно добавлено'];
+    }
+    
+    private function addIptablesRule(array $rule): array
+    {
+        $command = "iptables -A INPUT ";
+        
+        if (!empty($rule['protocol']) && $rule['protocol'] !== 'any') {
+            $command .= "-p " . $rule['protocol'] . " ";
+        }
+        
+        if (!empty($rule['port']) && $rule['port'] !== 'any') {
+            $command .= "--dport " . $rule['port'] . " ";
+        }
+        
+        if (!empty($rule['source']) && $rule['source'] !== 'any') {
+            $command .= "-s " . $rule['source'] . " ";
+        }
+        
+        if (!empty($rule['target'])) {
+            $command .= "-j " . $rule['target'] . " ";
+        }
+        
+        $command .= "2>&1";
+        $output = shell_exec($command);
+        
+        if (strpos($output, 'error') !== false || strpos($output, 'Error') !== false) {
+            return ['success' => false, 'message' => 'Ошибка добавления правила: ' . $output];
+        }
+        
+        return ['success' => true, 'message' => 'Правило успешно добавлено'];
+    }
+}

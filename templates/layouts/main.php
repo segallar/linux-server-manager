@@ -58,6 +58,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link <?= ($currentPage ?? '') === 'firewall' ? 'active' : '' ?>" href="/firewall">
+                                <i class="fas fa-shield-alt"></i>
+                                Файрвол
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#networkSubmenu">
                                 <i class="fas fa-network-wired"></i>
                                 <span>Сеть</span>

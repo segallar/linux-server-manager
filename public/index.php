@@ -11,6 +11,7 @@ use App\Controllers\ProcessController;
 use App\Controllers\ServiceController;
 use App\Controllers\NetworkController;
 use App\Controllers\PackageController;
+use App\Controllers\FirewallController;
 
 try {
     // Загружаем переменные окружения
@@ -36,6 +37,7 @@ try {
     $app->router->get('/network/wireguard', [NetworkController::class, 'wireguard']);
     $app->router->get('/network/cloudflare', [NetworkController::class, 'cloudflare']);
     $app->router->get('/network/routing', [NetworkController::class, 'routing']);
+    $app->router->get('/firewall', [FirewallController::class, 'index']);
 
     // API маршруты для управления сервисами
     $app->router->post('/api/services/start', [ServiceController::class, 'start']);
@@ -85,6 +87,16 @@ try {
     $app->router->get('/api/port-forwarding/rules', [NetworkController::class, 'getPortForwardingRules']);
     $app->router->post('/api/port-forwarding/rule/add', [NetworkController::class, 'addPortForwardingRule']);
     $app->router->delete('/api/port-forwarding/rule/{id}', [NetworkController::class, 'deletePortForwardingRule']);
+
+    // API маршруты для файрвола
+    $app->router->get('/api/firewall/info', [FirewallController::class, 'getFirewallInfo']);
+    $app->router->get('/api/firewall/stats', [FirewallController::class, 'getFirewallStats']);
+    $app->router->get('/api/firewall/rules', [FirewallController::class, 'getFirewallRules']);
+    $app->router->post('/api/firewall/rule/add', [FirewallController::class, 'addFirewallRule']);
+    $app->router->delete('/api/firewall/rule/{id}', [FirewallController::class, 'deleteFirewallRule']);
+    $app->router->post('/api/firewall/enable', [FirewallController::class, 'enableFirewall']);
+    $app->router->post('/api/firewall/disable', [FirewallController::class, 'disableFirewall']);
+    $app->router->get('/api/firewall/logs', [FirewallController::class, 'getFirewallLogs']);
 
     // Запускаем приложение
     $app->run();
