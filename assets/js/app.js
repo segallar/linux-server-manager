@@ -4,12 +4,6 @@
 $(document).ready(function() {
     console.log('jQuery подключен и готов к работе!');
     
-    // Инициализация бокового меню
-    initSidebar();
-    
-    // Инициализация подменю
-    initSubmenus();
-    
     // Инициализация активных ссылок
     initActiveLinks();
     
@@ -83,66 +77,29 @@ $(document).ready(function() {
     // Глобальная функция для показа уведомлений
     window.showAlert = showAlert;
     
-    // Инициализация бокового меню
-    function initSidebar() {
-        // Переключение бокового меню на мобильных устройствах
-        $('#sidebarToggle').on('click', function() {
-            $('#sidebar').toggleClass('show');
-        });
-        
-        // Закрытие меню при клике вне его на мобильных устройствах
-        $(document).on('click', function(e) {
-            if ($(window).width() <= 768) {
-                if (!$(e.target).closest('#sidebar, #sidebarToggle').length) {
-                    $('#sidebar').removeClass('show');
-                }
-            }
-        });
-        
-        // Обработка изменения размера окна
-        $(window).on('resize', function() {
-            if ($(window).width() > 768) {
-                $('#sidebar').removeClass('show');
-            }
-        });
-    }
-    
-    // Инициализация подменю
-    function initSubmenus() {
-        // Обработка кликов по пунктам с подменю
-        $('.sidebar-menu .nav-link[data-bs-toggle="collapse"]').on('click', function(e) {
-            e.preventDefault();
-            
-            var target = $($(this).data('bs-target'));
-            var icon = $(this).find('.fa-chevron-down');
-            
-            // Переключаем подменю
-            target.toggleClass('show');
-            
-            // Поворачиваем иконку
-            icon.toggleClass('fa-rotate-180');
-        });
-    }
-    
     // Инициализация активных ссылок
     function initActiveLinks() {
         // Определяем текущую страницу
         var currentPath = window.location.pathname;
+        console.log('Текущий путь:', currentPath);
         
-        // Убираем активный класс со всех ссылок
-        $('.sidebar-menu .nav-link').removeClass('active');
+        // Убираем активный класс со всех ссылок в основной навигации
+        $('.navbar-nav .nav-link').removeClass('active');
         
         // Добавляем активный класс к текущей ссылке
-        $('.sidebar-menu .nav-link').each(function() {
+        $('.navbar-nav .nav-link').each(function() {
             var href = $(this).attr('href');
+            console.log('Проверяем ссылку:', href, 'против', currentPath);
             if (href === currentPath) {
+                console.log('Найдено совпадение! Добавляем активный класс к:', href);
                 $(this).addClass('active');
             }
         });
         
-        // Обработка кликов по ссылкам в боковом меню
-        $('.sidebar-menu .nav-link:not([data-bs-toggle="collapse"])').on('click', function() {
-            $('.sidebar-menu .nav-link').removeClass('active');
+        // Обработка кликов по ссылкам в навигации
+        $('.navbar-nav .nav-link').on('click', function() {
+            console.log('Клик по ссылке:', $(this).attr('href'));
+            $('.navbar-nav .nav-link').removeClass('active');
             $(this).addClass('active');
         });
     }
