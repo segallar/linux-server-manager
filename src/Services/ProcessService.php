@@ -182,6 +182,42 @@ class ProcessService
     }
 
     /**
+     * Получить топ процессов по использованию ресурсов
+     */
+    public function getTopProcesses(int $limit = 10): array
+    {
+        $output = shell_exec("ps aux --sort=-%cpu | head -" . ($limit + 1) . " 2>/dev/null");
+        $lines = explode("\n", trim($output));
+        
+        $processes = [];
+        
+        // Пропускаем заголовок
+        for ($i = 1; $i < count($lines); $i++) {
+            $line = trim($lines[$i]);
+            if (empty($line)) continue;
+            
+            $parts = preg_split('/\s+/', $line, 11);
+            if (count($parts) < 11) continue;
+            
+            $processes[] = [
+                'pid' => $parts[1],
+                'user' => $parts[0],
+                'cpu' => $parts[2],
+                'mem' => $parts[3],
+                'vsz' => $this->formatBytes((int)$parts[4] * 1024),
+                'rss' => $this->formatBytes((int)$parts[5] * 1024),
+                'tty' => $parts[6],
+                'stat' => $parts[7],
+                'start' => $parts[8],
+                'time' => $parts[9],
+                'command' => $parts[10]
+            ];
+        }
+        
+        return $processes;
+    }
+
+    /**
      * Получить процессы по пользователю
      */
     public function getProcessesByUser(string $user): array
