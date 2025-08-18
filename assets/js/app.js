@@ -81,7 +81,6 @@ $(document).ready(function() {
     function initActiveLinks() {
         // Определяем текущую страницу
         var currentPath = window.location.pathname;
-        console.log('Текущий путь:', currentPath);
         
         // Убираем активный класс со всех ссылок в основной навигации
         $('.navbar-nav .nav-link').removeClass('active');
@@ -89,16 +88,13 @@ $(document).ready(function() {
         // Добавляем активный класс к текущей ссылке
         $('.navbar-nav .nav-link').each(function() {
             var href = $(this).attr('href');
-            console.log('Проверяем ссылку:', href, 'против', currentPath);
             if (href === currentPath) {
-                console.log('Найдено совпадение! Добавляем активный класс к:', href);
                 $(this).addClass('active');
             }
         });
         
         // Обработка кликов по ссылкам в навигации
         $('.navbar-nav .nav-link').on('click', function() {
-            console.log('Клик по ссылке:', $(this).attr('href'));
             $('.navbar-nav .nav-link').removeClass('active');
             $(this).addClass('active');
         });
