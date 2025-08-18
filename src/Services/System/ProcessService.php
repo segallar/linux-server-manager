@@ -12,7 +12,8 @@ class ProcessService extends BaseService implements ProcessServiceInterface
      */
     public function getActiveProcesses(int $limit = 10): array
     {
-        $output = $this->executeCommand("ps aux --sort=-%cpu | head -" . ($limit + 1));
+        // Сортируем по памяти, так как CPU часто 0% для системных процессов
+        $output = $this->executeCommand("ps aux --sort=-%mem | head -" . ($limit + 1));
         $lines = explode("\n", trim($output));
         
         $processes = [];
