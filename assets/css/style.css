@@ -19,7 +19,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Стили для навигационного меню */
+/* Навигационная панель Bootstrap */
 .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     padding: 0.5rem 0;
@@ -56,70 +56,26 @@ body {
     box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
 }
 
-/* Боковое меню */
-.sidebar {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    min-height: 100vh;
-    padding: 0;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 280px;
-    z-index: 1000;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-}
-
-.sidebar.show {
-    transform: translateX(0);
-}
-
-.sidebar-header {
-    padding: 2rem 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    text-align: center;
-}
-
-.sidebar-header h3 {
-    color: #fff;
-    margin: 0;
-    font-size: 1.3rem;
-}
-
-.sidebar-menu {
-    padding: 1rem 0;
-}
-
-.sidebar-menu .nav-item {
-    margin: 0.25rem 1rem;
-}
-
-.sidebar-menu .nav-link {
-    color: rgba(255,255,255,0.8) !important;
-    padding: 0.75rem 1rem !important;
+/* Выпадающее меню */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     border-radius: 8px;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
 }
 
-.sidebar-menu .nav-link:hover {
-    color: #fff !important;
-    background-color: rgba(255,255,255,0.1);
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
     transform: translateX(5px);
 }
 
-.sidebar-menu .nav-link.active {
-    color: #fff !important;
-    background-color: #3498db;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.4);
-}
-
-.sidebar-menu .nav-link i {
+.dropdown-item i {
     width: 20px;
-    text-align: center;
+    margin-right: 0.5rem;
 }
 
 /* Основной контент */
@@ -129,7 +85,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin: 1rem 0;
-    margin-left: 280px;
+    margin-top: 5rem; /* Отступ для фиксированной навигации */
     transition: margin-left 0.3s ease;
 }
 
@@ -208,74 +164,9 @@ body {
     animation: fadeIn 0.5s ease-out;
 }
 
-/* Кнопка мобильного меню */
-.mobile-menu-toggle {
-    display: none;
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
-    z-index: 1001;
-    background: var(--primary-color);
-    border: none;
-    color: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-}
-
-.mobile-menu-toggle:hover {
-    background: var(--accent-color);
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-}
-
-.mobile-menu-toggle:active {
-    transform: scale(0.95);
-}
-
-.mobile-menu-toggle i {
-    font-size: 1.4rem;
-    transition: transform 0.3s ease;
-}
-
-.mobile-menu-toggle.active i {
-    transform: rotate(90deg);
-}
-
-/* Оверлей для мобильного меню */
-.sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.sidebar-overlay.show {
-    opacity: 1;
-}
-
 /* Адаптивность для планшетов */
 @media (max-width: 1024px) {
-    .sidebar {
-        width: 250px;
-    }
-    
     .main-content {
-        margin-left: 250px;
         padding: 1.5rem;
     }
     
@@ -291,16 +182,13 @@ body {
 
 /* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
-    .mobile-menu-toggle {
-        display: flex !important;
-    }
-    
-    .navbar {
-        padding: 0.5rem 1rem;
-    }
-    
     .navbar-brand {
         font-size: 1.2rem;
+    }
+    
+    .main-content {
+        padding: 1rem;
+        margin-top: 4.5rem;
     }
     
     .stats-card {
@@ -367,7 +255,7 @@ body {
 @media (max-width: 480px) {
     .main-content {
         padding: 0.75rem;
-        margin-top: 3.5rem;
+        margin-top: 4rem;
     }
     
     .stats-card {
@@ -392,18 +280,6 @@ body {
         font-size: 0.8rem;
     }
     
-    .mobile-menu-toggle {
-        top: 0.75rem;
-        left: 0.75rem;
-        width: 52px;
-        height: 52px;
-        padding: 0.75rem;
-    }
-    
-    .mobile-menu-toggle i {
-        font-size: 1.3rem;
-    }
-    
     /* Скрываем больше колонок на очень маленьких экранах */
     .table-custom .d-none-xs {
         display: none !important;
@@ -412,38 +288,9 @@ body {
 
 /* Ландшафтная ориентация на мобильных */
 @media (max-width: 768px) and (orientation: landscape) {
-    .sidebar {
-        max-width: 280px;
-    }
-    
     .main-content {
-        margin-top: 3rem;
+        margin-top: 3.5rem;
     }
-    
-    .mobile-menu-toggle {
-        top: 0.5rem;
-    }
-}
-
-/* Стили для подменю */
-.submenu {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    background-color: rgba(0,0,0,0.1);
-    border-radius: 5px;
-    margin: 0.25rem 0;
-}
-
-.submenu.show {
-    max-height: 200px;
-}
-
-.submenu .nav-link {
-    padding: 0.5rem 1rem 0.5rem 3rem !important;
-    font-size: 0.9rem;
-    border-radius: 0;
-    margin: 0;
 }
 
 /* Индикаторы статуса */
@@ -488,28 +335,5 @@ body {
 @media (max-width: 480px) {
     .d-none-xs {
         display: none !important;
-    }
-}
-
-/* Мобильное меню - выезжает от кнопки */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        max-width: 320px;
-        transform: translateX(-100%);
-        top: 0;
-        left: 0;
-        border-radius: 0 20px 20px 0;
-        box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-    }
-    
-    .sidebar.show {
-        transform: translateX(0);
-    }
-    
-    .main-content {
-        margin-left: 0;
-        padding: 1rem;
-        margin-top: 5rem; /* Увеличиваем отступ сверху для кнопки */
     }
 }

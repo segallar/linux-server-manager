@@ -20,87 +20,68 @@
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-    <!-- Кнопка мобильного меню -->
-    <button class="mobile-menu-toggle" id="mobileMenuToggle">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <!-- Оверлей для мобильного меню -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Боковое меню -->
-    <nav class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3><i class="fas fa-server"></i> Server Manager</h3>
-        </div>
-        <div class="sidebar-menu">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link <?= ($currentPage ?? '') === 'dashboard' ? 'active' : '' ?>" href="/">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= ($currentPage ?? '') === 'system' ? 'active' : '' ?>" href="/system">
-                        <i class="fas fa-server"></i>
-                        <span>Системная информация</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= ($currentPage ?? '') === 'processes' ? 'active' : '' ?>" href="/processes">
-                        <i class="fas fa-tasks"></i>
-                        <span>Управление процессами</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= ($currentPage ?? '') === 'services' ? 'active' : '' ?>" href="/services">
-                        <i class="fas fa-cogs"></i>
-                        <span>Управление сервисами</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= ($currentPage ?? '') === 'packages' ? 'active' : '' ?>" href="/packages">
-                        <i class="fas fa-box"></i>
-                        <span>Управление пакетами</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= ($currentPage ?? '') === 'firewall' ? 'active' : '' ?>" href="/firewall">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Файрвол</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#networkSubmenu">
-                        <i class="fas fa-network-wired"></i>
-                        <span>Сеть</span>
-                        <i class="fas fa-chevron-down ms-auto"></i>
-                    </a>
-                    <div class="collapse submenu" id="networkSubmenu">
-                        <a class="nav-link" href="/network/ssh">
-                            <i class="fas fa-terminal"></i>
-                            <span>SSH туннели</span>
+    <!-- Навигационная панель Bootstrap -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <!-- Бренд -->
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-server"></i> Server Manager
+            </a>
+            
+            <!-- Кнопка мобильного меню -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Навигационные элементы -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($currentPage ?? '') === 'dashboard' ? 'active' : '' ?>" href="/">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
-                        <a class="nav-link" href="/network/port-forwarding">
-                            <i class="fas fa-exchange-alt"></i>
-                            <span>Проброс портов</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($currentPage ?? '') === 'system' ? 'active' : '' ?>" href="/system">
+                            <i class="fas fa-server"></i> Системная информация
                         </a>
-                        <a class="nav-link" href="/network/wireguard">
-                            <i class="fas fa-lock"></i>
-                            <span>WireGuard</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($currentPage ?? '') === 'processes' ? 'active' : '' ?>" href="/processes">
+                            <i class="fas fa-tasks"></i> Управление процессами
                         </a>
-                        <a class="nav-link" href="/network/cloudflare">
-                            <i class="fas fa-cloud"></i>
-                            <span>Cloudflare</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($currentPage ?? '') === 'services' ? 'active' : '' ?>" href="/services">
+                            <i class="fas fa-cogs"></i> Управление сервисами
                         </a>
-                        <a class="nav-link" href="/network/routing">
-                            <i class="fas fa-route"></i>
-                            <span>Маршрутизация</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($currentPage ?? '') === 'packages' ? 'active' : '' ?>" href="/packages">
+                            <i class="fas fa-box"></i> Управление пакетами
                         </a>
-                    </div>
-                </li>
-            </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($currentPage ?? '') === 'firewall' ? 'active' : '' ?>" href="/firewall">
+                            <i class="fas fa-shield-alt"></i> Файрвол
+                        </a>
+                    </li>
+                    
+                    <!-- Выпадающее меню для сети -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-network-wired"></i> Сеть
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/network/ssh"><i class="fas fa-terminal"></i> SSH туннели</a></li>
+                            <li><a class="dropdown-item" href="/network/port-forwarding"><i class="fas fa-exchange-alt"></i> Проброс портов</a></li>
+                            <li><a class="dropdown-item" href="/network/wireguard"><i class="fas fa-lock"></i> WireGuard</a></li>
+                            <li><a class="dropdown-item" href="/network/cloudflare"><i class="fas fa-cloud"></i> Cloudflare</a></li>
+                            <li><a class="dropdown-item" href="/network/routing"><i class="fas fa-route"></i> Маршрутизация</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -130,97 +111,5 @@
     <!-- Кастомные скрипты -->
     <script src="/assets/js/app.js"></script>
     <script src="/assets/js/smart-loading.js"></script>
-    
-    <!-- Скрипт для мобильного меню -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-            
-            // Открытие/закрытие мобильного меню
-            mobileMenuToggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const isOpen = sidebar.classList.contains('show');
-                
-                if (isOpen) {
-                    // Закрываем меню
-                    sidebar.classList.remove('show');
-                    sidebarOverlay.classList.remove('show');
-                    mobileMenuToggle.classList.remove('active');
-                    setTimeout(() => {
-                        sidebarOverlay.style.display = 'none';
-                    }, 300);
-                } else {
-                    // Открываем меню
-                    sidebarOverlay.style.display = 'block';
-                    setTimeout(() => {
-                        sidebar.classList.add('show');
-                        sidebarOverlay.classList.add('show');
-                        mobileMenuToggle.classList.add('active');
-                    }, 10);
-                }
-            });
-            
-            // Закрытие меню при клике на оверлей
-            sidebarOverlay.addEventListener('click', function() {
-                sidebar.classList.remove('show');
-                sidebarOverlay.classList.remove('show');
-                mobileMenuToggle.classList.remove('active');
-                setTimeout(() => {
-                    sidebarOverlay.style.display = 'none';
-                }, 300);
-            });
-            
-            // Закрытие меню при клике на ссылку (на мобильных)
-            const navLinks = sidebar.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.remove('show');
-                        sidebarOverlay.classList.remove('show');
-                        mobileMenuToggle.classList.remove('active');
-                        setTimeout(() => {
-                            sidebarOverlay.style.display = 'none';
-                        }, 300);
-                    }
-                });
-            });
-            
-            // Закрытие меню при изменении размера окна
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    sidebar.classList.remove('show');
-                    sidebarOverlay.classList.remove('show');
-                    mobileMenuToggle.classList.remove('active');
-                    sidebarOverlay.style.display = 'none';
-                }
-            });
-            
-            // Предотвращение скролла body когда меню открыто
-            function toggleBodyScroll(disable) {
-                if (disable) {
-                    document.body.style.overflow = 'hidden';
-                } else {
-                    document.body.style.overflow = '';
-                }
-            }
-            
-            // Обновляем обработчик для управления скроллом
-            mobileMenuToggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const isOpen = sidebar.classList.contains('show');
-                toggleBodyScroll(!isOpen);
-            });
-            
-            sidebarOverlay.addEventListener('click', function() {
-                toggleBodyScroll(false);
-            });
-        });
-    </script>
 </body>
 </html>
