@@ -15,15 +15,8 @@ class SmartLoadingIndicator {
         this.hideOnPageLoad();
         this.checkCacheStatus();
         
-        // Показываем индикатор при загрузке DOM для всех страниц
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.show(window.location.pathname);
-            });
-        } else {
-            // DOM уже загружен
-            this.show(window.location.pathname);
-        }
+        // Убираем автоматический показ при загрузке DOM
+        // Индикатор будет показываться только при переходах между страницами
     }
 
     createIndicator() {
