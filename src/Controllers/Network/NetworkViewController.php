@@ -108,12 +108,14 @@ class NetworkViewController extends Controller implements NetworkViewControllerI
         
         $interfaces = $wireguardService->getInterfaces();
         $stats = $wireguardService->getStats();
+        $isInstalled = $wireguardService->isInstalled();
         
         return $this->render('network/wireguard', [
             'title' => 'WireGuard',
             'currentPage' => 'network',
             'interfaces' => $interfaces,
-            'stats' => $stats
+            'stats' => $stats,
+            'isInstalled' => $isInstalled
         ]);
     }
 
@@ -126,12 +128,14 @@ class NetworkViewController extends Controller implements NetworkViewControllerI
         
         $tunnels = $cloudflareService->getTunnels();
         $stats = $cloudflareService->getStats();
+        $isInstalled = $cloudflareService->isInstalled();
         
         return $this->render('network/cloudflare', [
             'title' => 'Cloudflare туннели',
             'currentPage' => 'network',
             'tunnels' => $tunnels,
-            'stats' => $stats
+            'stats' => $stats,
+            'isInstalled' => $isInstalled
         ]);
     }
 

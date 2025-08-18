@@ -21,12 +21,14 @@ class WireGuardController extends Controller
     {
         $interfaces = $this->wireguardService->getInterfaces();
         $stats = $this->wireguardService->getStats();
+        $isInstalled = $this->wireguardService->isInstalled();
         
         return $this->render('network/wireguard', [
             'title' => 'WireGuard',
             'currentPage' => 'network',
             'interfaces' => $interfaces,
-            'stats' => $stats
+            'stats' => $stats,
+            'isInstalled' => $isInstalled
         ]);
     }
 

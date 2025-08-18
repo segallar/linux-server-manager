@@ -21,12 +21,14 @@ class CloudflareController extends Controller
     {
         $tunnels = $this->cloudflareService->getTunnels();
         $stats = $this->cloudflareService->getStats();
+        $isInstalled = $this->cloudflareService->isInstalled();
         
         return $this->render('network/cloudflare', [
             'title' => 'Cloudflare туннели',
             'currentPage' => 'network',
             'tunnels' => $tunnels,
-            'stats' => $stats
+            'stats' => $stats,
+            'isInstalled' => $isInstalled
         ]);
     }
 
