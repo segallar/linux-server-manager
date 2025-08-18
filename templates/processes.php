@@ -33,7 +33,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Активные</h6>
-                            <h3 class="mb-0"><?= $stats['active'] ?></h3>
+                            <h3 class="mb-0"><?= $stats['running'] ?></h3>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-play fa-2x"></i>
