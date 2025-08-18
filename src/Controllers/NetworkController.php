@@ -54,6 +54,9 @@ class NetworkController extends Controller
         // Получаем реальные данные о правилах проброса портов
         $rules = $networkService->getPortForwardingRules();
         
+        // Получаем предупреждения безопасности
+        $securityWarnings = $networkService->getPortForwardingSecurityWarnings();
+        
         // Вычисляем статистику
         $stats = [
             'active_rules' => 0,
@@ -72,6 +75,7 @@ class NetworkController extends Controller
             'title' => 'Проброс портов',
             'currentPage' => 'network',
             'rules' => $rules,
+            'securityWarnings' => $securityWarnings,
             'stats' => $stats
         ]);
     }

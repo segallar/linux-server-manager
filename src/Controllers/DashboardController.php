@@ -3,100 +3,67 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Services\SystemService;
+use App\Services\ServiceService;
+use App\Services\ProcessService;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Используем тестовые данные в правильном формате
+        $systemService = new SystemService();
+        $serviceService = new ServiceService();
+        $processService = new ProcessService();
+        
+        // Получаем реальные данные о системе
+        $cpuInfo = $systemService->getCpuInfo();
+        $memoryInfo = $systemService->getMemoryInfo();
+        $diskInfo = $systemService->getDiskInfo();
+        $networkInfo = $systemService->getNetworkInfo();
+        $systemInfo = $systemService->getSystemInfo();
+        
+        // Формируем статистику
         $stats = [
             'cpu' => [
-                'usage' => 25,
-                'model' => 'Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz',
-                'cores' => 8,
-                'load' => [1.2, 1.5, 1.8]
+                'usage' => $cpuInfo['usage'],
+                'model' => $cpuInfo['model'] ?? 'Unknown',
+                'cores' => $cpuInfo['cores'],
+                'load' => implode(', ', $cpuInfo['load'])
             ],
             'memory' => [
-                'total' => '16GB',
-                'used' => '8GB',
-                'free' => '8GB',
-                'usage_percent' => 50
+                'total' => $memoryInfo['total'],
+                'used' => $memoryInfo['used'],
+                'free' => $memoryInfo['free'],
+                'usage_percent' => $memoryInfo['usage_percent']
             ],
             'disk' => [
-                'total' => '500GB',
-                'used' => '375GB',
-                'free' => '125GB',
-                'usage_percent' => 75
+                'total' => $diskInfo['total'],
+                'used' => $diskInfo['used'],
+                'free' => $diskInfo['free'],
+                'usage_percent' => $diskInfo['usage_percent']
             ],
             'system' => [
-                'os' => 'Ubuntu 22.04.3 LTS',
-                'kernel' => '5.15.0-88-generic',
-                'uptime' => '2 дня, 5 часов, 30 минут',
-                'hostname' => 'sirocco.romansegalla.online',
-                'load' => '1.2, 1.5, 1.8',
-                'users' => 3,
-                'date' => date('Y-m-d H:i:s')
+                'os' => $systemInfo['os'],
+                'kernel' => $systemInfo['kernel'],
+                'uptime' => $systemInfo['uptime'],
+                'hostname' => $systemInfo['hostname'],
+                'load' => $systemInfo['load'],
+                'users' => $systemInfo['users'],
+                'date' => $systemInfo['date']
             ],
             'network' => [
-                'status' => 'Online',
-                'active_count' => 2,
-                'total_count' => 2,
-                'interfaces' => [
-                    [
-                        'name' => 'eth0',
-                        'status' => 'up',
-                        'ips' => ['192.168.1.100', '10.0.0.50']
-                    ],
-                    [
-                        'name' => 'lo',
-                        'status' => 'up',
-                        'ips' => ['127.0.0.1']
-                    ]
-                ]
+                'status' => $networkInfo['status'],
+                'active_count' => $networkInfo['active_count'],
+                'total_count' => $networkInfo['total_count'],
+                'interfaces' => array_values($networkInfo['interfaces'])
             ]
         ];
 
-        $processes = [
-            [
-                'pid' => 1234,
-                'name' => 'nginx',
-                'cpu' => 2.5,
-                'memory' => 15.2,
-                'status' => 'running'
-            ],
-            [
-                'pid' => 5678,
-                'name' => 'php-fpm',
-                'cpu' => 1.8,
-                'memory' => 25.1,
-                'status' => 'running'
-            ],
-            [
-                'pid' => 9012,
-                'name' => 'sshd',
-                'cpu' => 0.5,
-                'memory' => 8.3,
-                'status' => 'running'
-            ]
-        ];
+        // Получаем реальные процессы
+        $processes = $processService->getTopProcesses(10);
 
-        $services = [
-            [
-                'name' => 'nginx',
-                'status' => 'active',
-                'enabled' => true
-            ],
-            [
-                'name' => 'php8.3-fpm',
-                'status' => 'active',
-                'enabled' => true
-            ],
-            [
-                'name' => 'ssh',
-                'status' => 'active',
-                'enabled' => true
-            ]
-        ];
+        // Получаем реальные сервисы
+        $services = $serviceService->getServices();
 
         return $this->render('dashboard', [
             'title' => 'Dashboard',

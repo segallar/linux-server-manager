@@ -142,29 +142,95 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1 text-warning">Порт 3306 открыт</h6>
-                            <small class="text-muted">База данных доступна извне</small>
-                        </div>
-                        <span class="badge bg-warning rounded-pill">Высокий риск</span>
+                <?php if (empty($securityWarnings)): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                        <h6 class="text-success">Безопасность в порядке</h6>
+                        <p class="text-muted small">Критических проблем безопасности не обнаружено</p>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1 text-info">Порт 21 не используется</h6>
-                            <small class="text-muted">FTP сервер отключен</small>
-                        </div>
-                        <span class="badge bg-info rounded-pill">Информация</span>
+                <?php else: ?>
+                    <div class="list-group list-group-flush">
+                        <?php 
+                        $displayedWarnings = 0;
+                        foreach ($securityWarnings as $warning): 
+                            if ($displayedWarnings >= 5) break; // Показываем только первые 5
+                            
+                            // Определяем цвет и класс в зависимости от уровня риска
+                            switch ($warning['risk']) {
+                                case 'high':
+                                    $textClass = 'text-danger';
+                                    $badgeClass = 'bg-danger';
+                                    $iconClass = 'fas fa-exclamation-triangle';
+                                    break;
+                                case 'medium':
+                                    $textClass = 'text-warning';
+                                    $badgeClass = 'bg-warning';
+                                    $iconClass = 'fas fa-exclamation-circle';
+                                    break;
+                                case 'low':
+                                    $textClass = 'text-info';
+                                    $badgeClass = 'bg-info';
+                                    $iconClass = 'fas fa-info-circle';
+                                    break;
+                                default:
+                                    $textClass = 'text-secondary';
+                                    $badgeClass = 'bg-secondary';
+                                    $iconClass = 'fas fa-info-circle';
+                            }
+                        ?>
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="<?= $iconClass ?> <?= $textClass ?> me-2"></i>
+                                        <h6 class="mb-0 <?= $textClass ?>"><?= htmlspecialchars($warning['title']) ?></h6>
+                                    </div>
+                                    <small class="text-muted d-block mb-1"><?= htmlspecialchars($warning['description']) ?></small>
+                                    <?php if (!empty($warning['recommendation'])): ?>
+                                        <small class="text-muted d-block">
+                                            <strong>Рекомендация:</strong> <?= htmlspecialchars($warning['recommendation']) ?>
+                                        </small>
+                                    <?php endif; ?>
+                                    <?php if (!empty($warning['rule_name'])): ?>
+                                        <small class="text-muted d-block">
+                                            <strong>Правило:</strong> <?= htmlspecialchars($warning['rule_name']) ?>
+                                            <?php if (!empty($warning['external_port'])): ?>
+                                                (порт <?= $warning['external_port'] ?>)
+                                            <?php endif; ?>
+                                        </small>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="ms-3">
+                                    <?php
+                                    $riskText = '';
+                                    switch ($warning['risk']) {
+                                        case 'high':
+                                            $riskText = 'Высокий риск';
+                                            break;
+                                        case 'medium':
+                                            $riskText = 'Средний риск';
+                                            break;
+                                        case 'low':
+                                            $riskText = 'Низкий риск';
+                                            break;
+                                    }
+                                    ?>
+                                    <span class="badge <?= $badgeClass ?> rounded-pill"><?= $riskText ?></span>
+                                </div>
+                            </div>
+                        <?php 
+                            $displayedWarnings++;
+                        endforeach; 
+                        ?>
+                        
+                        <?php if (count($securityWarnings) > 5): ?>
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    Показано 5 из <?= count($securityWarnings) ?> предупреждений
+                                </small>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1 text-success">Порт 443 защищен</h6>
-                            <small class="text-muted">SSL сертификат активен</small>
-                        </div>
-                        <span class="badge bg-success rounded-pill">Безопасно</span>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

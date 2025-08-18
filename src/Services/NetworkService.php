@@ -959,4 +959,159 @@ class NetworkService
             return [];
         }
     }
+
+    /**
+     * Получить предупреждения безопасности для правил проброса портов
+     */
+    public function getPortForwardingSecurityWarnings(): array
+    {
+        try {
+            $warnings = [];
+            $rules = $this->getPortForwardingRules();
+            
+            // Опасные порты и их описания
+            $dangerousPorts = [
+                21 => ['name' => 'FTP', 'risk' => 'high', 'description' => 'FTP протокол небезопасен'],
+                22 => ['name' => 'SSH', 'risk' => 'medium', 'description' => 'SSH доступ извне'],
+                23 => ['name' => 'Telnet', 'risk' => 'high', 'description' => 'Telnet небезопасен'],
+                25 => ['name' => 'SMTP', 'risk' => 'medium', 'description' => 'Почтовый сервер'],
+                53 => ['name' => 'DNS', 'risk' => 'low', 'description' => 'DNS сервер'],
+                80 => ['name' => 'HTTP', 'risk' => 'medium', 'description' => 'HTTP без шифрования'],
+                110 => ['name' => 'POP3', 'risk' => 'medium', 'description' => 'POP3 почта'],
+                143 => ['name' => 'IMAP', 'risk' => 'medium', 'description' => 'IMAP почта'],
+                443 => ['name' => 'HTTPS', 'risk' => 'low', 'description' => 'HTTPS с шифрованием'],
+                3306 => ['name' => 'MySQL', 'risk' => 'high', 'description' => 'База данных MySQL'],
+                3389 => ['name' => 'RDP', 'risk' => 'high', 'description' => 'Удаленный рабочий стол'],
+                5432 => ['name' => 'PostgreSQL', 'risk' => 'high', 'description' => 'База данных PostgreSQL'],
+                5900 => ['name' => 'VNC', 'risk' => 'high', 'description' => 'VNC доступ'],
+                6379 => ['name' => 'Redis', 'risk' => 'high', 'description' => 'Redis без аутентификации'],
+                8080 => ['name' => 'HTTP Alt', 'risk' => 'medium', 'description' => 'Альтернативный HTTP'],
+                8443 => ['name' => 'HTTPS Alt', 'risk' => 'low', 'description' => 'Альтернативный HTTPS']
+            ];
+            
+            // Проверяем каждое правило
+            foreach ($rules as $rule) {
+                $externalPort = (int)$rule['external_port'];
+                $internalPort = (int)$rule['internal_port'];
+                $protocol = $rule['protocol'];
+                $status = $rule['status'];
+                
+                // Проверяем опасные порты
+                if (isset($dangerousPorts[$externalPort])) {
+                    $portInfo = $dangerousPorts[$externalPort];
+                    
+                    $warnings[] = [
+                        'type' => 'dangerous_port',
+                        'title' => "Порт {$externalPort} ({$portInfo['name']}) открыт",
+                        'description' => $portInfo['description'],
+                        'risk' => $portInfo['risk'],
+                        'rule_id' => $rule['id'],
+                        'rule_name' => $rule['name'],
+                        'external_port' => $externalPort,
+                        'internal_ip' => $rule['target_ip'], // Assuming target_ip is the internal_ip for this context
+                        'status' => $status,
+                        'recommendation' => $this->getSecurityRecommendation($portInfo['name'], $portInfo['risk'])
+                    ];
+                }
+                
+                // Проверяем HTTP без HTTPS
+                if ($externalPort === 80 && $status === 'active') {
+                    $hasHttps = false;
+                    foreach ($rules as $otherRule) {
+                        if ($otherRule['external_port'] == 443 && $otherRule['status'] === 'active') {
+                            $hasHttps = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!$hasHttps) {
+                        $warnings[] = [
+                            'type' => 'http_without_https',
+                            'title' => 'HTTP без HTTPS',
+                            'description' => 'Порт 80 открыт, но порт 443 не настроен',
+                            'risk' => 'medium',
+                            'rule_id' => $rule['id'],
+                            'rule_name' => $rule['name'],
+                            'external_port' => $externalPort,
+                            'internal_ip' => $rule['target_ip'], // Assuming target_ip is the internal_ip for this context
+                            'status' => $status,
+                            'recommendation' => 'Настройте HTTPS (порт 443) для безопасного соединения'
+                        ];
+                    }
+                }
+                
+                // Проверяем неиспользуемые правила
+                if ($status === 'inactive') {
+                    $warnings[] = [
+                        'type' => 'inactive_rule',
+                        'title' => "Правило '{$rule['name']}' неактивно",
+                        'description' => "Порт {$externalPort} не используется",
+                        'risk' => 'low',
+                        'rule_id' => $rule['id'],
+                        'rule_name' => $rule['name'],
+                        'external_port' => $externalPort,
+                        'internal_ip' => $rule['target_ip'], // Assuming target_ip is the internal_ip for this context
+                        'status' => $status,
+                        'recommendation' => 'Удалите неиспользуемое правило или активируйте его'
+                    ];
+                }
+            }
+            
+            // Проверяем общие проблемы безопасности
+            $activeRules = array_filter($rules, function($rule) {
+                return $rule['status'] === 'active';
+            });
+            
+            if (count($activeRules) > 10) {
+                $warnings[] = [
+                    'type' => 'too_many_rules',
+                    'title' => 'Слишком много открытых портов',
+                    'description' => 'Открыто ' . count($activeRules) . ' портов',
+                    'risk' => 'medium',
+                    'rule_id' => null,
+                    'rule_name' => null,
+                    'external_port' => null,
+                    'internal_ip' => null,
+                    'status' => null,
+                    'recommendation' => 'Рассмотрите возможность закрытия неиспользуемых портов'
+                ];
+            }
+            
+            // Сортируем по уровню риска
+            $riskOrder = ['high' => 3, 'medium' => 2, 'low' => 1];
+            usort($warnings, function($a, $b) use ($riskOrder) {
+                return $riskOrder[$b['risk']] - $riskOrder[$a['risk']];
+            });
+            
+            return $warnings;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+    
+    /**
+     * Получить рекомендации по безопасности
+     */
+    private function getSecurityRecommendation(string $service, string $risk): string
+    {
+        $recommendations = [
+            'FTP' => 'Используйте SFTP вместо FTP',
+            'SSH' => 'Настройте ключевую аутентификацию и ограничьте доступ',
+            'Telnet' => 'Замените на SSH',
+            'SMTP' => 'Настройте аутентификацию и шифрование',
+            'DNS' => 'Настройте DNSSEC',
+            'HTTP' => 'Перенаправьте на HTTPS',
+            'POP3' => 'Используйте POP3S или IMAPS',
+            'IMAP' => 'Используйте IMAPS',
+            'MySQL' => 'Ограничьте доступ по IP и используйте сильные пароли',
+            'PostgreSQL' => 'Ограничьте доступ по IP и используйте SSL',
+            'RDP' => 'Используйте VPN или ограничьте доступ по IP',
+            'VNC' => 'Используйте SSH туннель для VNC',
+            'Redis' => 'Настройте аутентификацию и ограничьте доступ',
+            'HTTP Alt' => 'Перенаправьте на HTTPS',
+            'HTTPS Alt' => 'Проверьте SSL сертификат'
+        ];
+        
+        return $recommendations[$service] ?? 'Проверьте настройки безопасности';
+    }
 }
