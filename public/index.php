@@ -32,6 +32,7 @@ try {
     $app->router->get('/packages', [PackageController::class, 'index']);
 
     // Маршруты для сети
+    $app->router->get('/network', [NetworkController::class, 'index']);
     $app->router->get('/network/ssh', [NetworkController::class, 'ssh']);
     $app->router->get('/network/port-forwarding', [NetworkController::class, 'portForwarding']);
     $app->router->get('/network/wireguard', [NetworkController::class, 'wireguard']);

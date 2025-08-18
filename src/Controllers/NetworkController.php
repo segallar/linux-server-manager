@@ -10,6 +10,17 @@ use App\Services\SystemService;
 
 class NetworkController extends Controller
 {
+    /**
+     * Главная страница сети
+     */
+    public function index()
+    {
+        return $this->render('network/index', [
+            'title' => 'Сеть',
+            'currentPage' => 'network'
+        ]);
+    }
+
     public function ssh()
     {
         $networkService = new NetworkService();
