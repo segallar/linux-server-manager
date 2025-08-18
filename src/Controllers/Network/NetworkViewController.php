@@ -126,11 +126,6 @@ class NetworkViewController extends Controller implements NetworkViewControllerI
     public function cloudflare(): string
     {
         try {
-            // Проверяем, существует ли класс CloudflareService
-            if (!class_exists('App\Services\Cloudflare\CloudflareService')) {
-                throw new \Exception('CloudflareService не найден');
-            }
-            
             $cloudflareService = new CloudflareService();
             
             $tunnels = $cloudflareService->getTunnels();
