@@ -65,8 +65,16 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Диск</h6>
-                            <h3 class="mb-0"><?= $stats['disk']['usage_percent'] ?>%</h3>
-                            <small><?= $stats['disk']['used'] ?> / <?= $stats['disk']['total'] ?></small>
+                            <?php 
+                            $mainDisk = !empty($stats['disk']) ? $stats['disk'][0] : null;
+                            if ($mainDisk): 
+                            ?>
+                            <h3 class="mb-0"><?= $mainDisk['usage_percent'] ?? 0 ?>%</h3>
+                            <small><?= $mainDisk['used'] ?? '0' ?> / <?= $mainDisk['size'] ?? '0' ?></small>
+                            <?php else: ?>
+                            <h3 class="mb-0">0%</h3>
+                            <small>0 / 0</small>
+                            <?php endif; ?>
                         </div>
                         <div class="align-self-center">
                             <i class="fas fa-hdd fa-2x"></i>
@@ -205,7 +213,13 @@
                         <div class="col-6">
                             <p>
                                 <strong>Загрузка:</strong> 
-                                <?= htmlspecialchars($stats['system']['load'] ?? 'Неизвестно') ?>
+                                <?php 
+                                $load = $stats['system']['load'] ?? '0.00, 0.00, 0.00';
+                                if (is_array($load)) {
+                                    $load = implode(', ', array_map(function($val) { return number_format($val, 2); }, $load));
+                                }
+                                ?>
+                                <?= htmlspecialchars($load) ?>
                                 <i class="fas fa-question-circle text-muted ms-1" 
                                    data-bs-toggle="tooltip" 
                                    data-bs-placement="top" 
