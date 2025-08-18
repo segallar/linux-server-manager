@@ -9,7 +9,11 @@ use App\Controllers\DashboardController;
 use App\Controllers\SystemController;
 use App\Controllers\ProcessController;
 use App\Controllers\ServiceController;
-use App\Controllers\NetworkController;
+use App\Controllers\Network\NetworkViewController;
+use App\Controllers\Network\SSHTunnelApiController;
+use App\Controllers\Network\PortForwardingApiController;
+use App\Controllers\Network\WireGuardController;
+use App\Controllers\Network\CloudflareController;
 use App\Controllers\PackageController;
 use App\Controllers\FirewallController;
 
@@ -32,12 +36,12 @@ try {
     $app->router->get('/packages', [PackageController::class, 'index']);
 
     // Маршруты для сети
-    $app->router->get('/network', [NetworkController::class, 'index']);
-    $app->router->get('/network/ssh', [NetworkController::class, 'ssh']);
-    $app->router->get('/network/port-forwarding', [NetworkController::class, 'portForwarding']);
-    $app->router->get('/network/wireguard', [NetworkController::class, 'wireguard']);
-    $app->router->get('/network/cloudflare', [NetworkController::class, 'cloudflare']);
-    $app->router->get('/network/routing', [NetworkController::class, 'routing']);
+    $app->router->get('/network', [NetworkViewController::class, 'index']);
+    $app->router->get('/network/ssh', [NetworkViewController::class, 'ssh']);
+    $app->router->get('/network/port-forwarding', [NetworkViewController::class, 'portForwarding']);
+    $app->router->get('/network/wireguard', [NetworkViewController::class, 'wireguard']);
+    $app->router->get('/network/cloudflare', [NetworkViewController::class, 'cloudflare']);
+    $app->router->get('/network/routing', [NetworkViewController::class, 'routing']);
     $app->router->get('/firewall', [FirewallController::class, 'index']);
 
     // API маршруты для управления сервисами
@@ -62,32 +66,32 @@ try {
     $app->router->post('/api/system/processes/{id}/kill', [ProcessController::class, 'killProcess']);
 
     // API маршруты для WireGuard
-    $app->router->get('/api/wireguard/interfaces', [NetworkController::class, 'getWireGuardInterfaces']);
-    $app->router->get('/api/wireguard/interface/{name}', [NetworkController::class, 'getWireGuardInterface']);
-    $app->router->post('/api/wireguard/interface/{name}/up', [NetworkController::class, 'upWireGuardInterface']);
-    $app->router->post('/api/wireguard/interface/{name}/down', [NetworkController::class, 'downWireGuardInterface']);
-    $app->router->post('/api/wireguard/interface/{name}/restart', [NetworkController::class, 'restartWireGuardInterface']);
-    $app->router->get('/api/wireguard/interface/{name}/config', [NetworkController::class, 'getWireGuardConfig']);
-    $app->router->post('/api/wireguard/interface/{name}/config', [NetworkController::class, 'updateWireGuardConfig']);
+    $app->router->get('/api/wireguard/interfaces', [WireGuardController::class, 'getWireGuardInterfaces']);
+    $app->router->get('/api/wireguard/interface/{name}', [WireGuardController::class, 'getWireGuardInterface']);
+    $app->router->post('/api/wireguard/interface/{name}/up', [WireGuardController::class, 'upWireGuardInterface']);
+    $app->router->post('/api/wireguard/interface/{name}/down', [WireGuardController::class, 'downWireGuardInterface']);
+    $app->router->post('/api/wireguard/interface/{name}/restart', [WireGuardController::class, 'restartWireGuardInterface']);
+    $app->router->get('/api/wireguard/interface/{name}/config', [WireGuardController::class, 'getWireGuardConfig']);
+    $app->router->post('/api/wireguard/interface/{name}/config', [WireGuardController::class, 'updateWireGuardConfig']);
 
     // API маршруты для SSH туннелей
-    $app->router->get('/api/ssh/tunnels', [NetworkController::class, 'getSSHTunnels']);
-    $app->router->post('/api/ssh/tunnel/create', [NetworkController::class, 'createSSHTunnel']);
-    $app->router->post('/api/ssh/tunnel/{id}/start', [NetworkController::class, 'startSSHTunnel']);
-    $app->router->post('/api/ssh/tunnel/{id}/stop', [NetworkController::class, 'stopSSHTunnel']);
-    $app->router->delete('/api/ssh/tunnel/{id}', [NetworkController::class, 'deleteSSHTunnel']);
+    $app->router->get('/api/ssh/tunnels', [SSHTunnelApiController::class, 'getSSHTunnels']);
+    $app->router->post('/api/ssh/tunnel/create', [SSHTunnelApiController::class, 'createSSHTunnel']);
+    $app->router->post('/api/ssh/tunnel/{id}/start', [SSHTunnelApiController::class, 'startSSHTunnel']);
+    $app->router->post('/api/ssh/tunnel/{id}/stop', [SSHTunnelApiController::class, 'stopSSHTunnel']);
+    $app->router->delete('/api/ssh/tunnel/{id}', [SSHTunnelApiController::class, 'deleteSSHTunnel']);
 
     // API маршруты для Cloudflare туннелей
-    $app->router->get('/api/cloudflare/tunnels', [NetworkController::class, 'getCloudflareTunnels']);
-    $app->router->post('/api/cloudflare/tunnel/create', [NetworkController::class, 'createCloudflareTunnel']);
-    $app->router->post('/api/cloudflare/tunnel/{id}/start', [NetworkController::class, 'startCloudflareTunnel']);
-    $app->router->post('/api/cloudflare/tunnel/{id}/stop', [NetworkController::class, 'stopCloudflareTunnel']);
-    $app->router->delete('/api/cloudflare/tunnel/{id}', [NetworkController::class, 'deleteCloudflareTunnel']);
+    $app->router->get('/api/cloudflare/tunnels', [CloudflareController::class, 'getCloudflareTunnels']);
+    $app->router->post('/api/cloudflare/tunnel/create', [CloudflareController::class, 'createCloudflareTunnel']);
+    $app->router->post('/api/cloudflare/tunnel/{id}/start', [CloudflareController::class, 'startCloudflareTunnel']);
+    $app->router->post('/api/cloudflare/tunnel/{id}/stop', [CloudflareController::class, 'stopCloudflareTunnel']);
+    $app->router->delete('/api/cloudflare/tunnel/{id}', [CloudflareController::class, 'deleteCloudflareTunnel']);
 
     // API маршруты для проброса портов
-    $app->router->get('/api/port-forwarding/rules', [NetworkController::class, 'getPortForwardingRules']);
-    $app->router->post('/api/port-forwarding/rule/add', [NetworkController::class, 'addPortForwardingRule']);
-    $app->router->delete('/api/port-forwarding/rule/{id}', [NetworkController::class, 'deletePortForwardingRule']);
+    $app->router->get('/api/port-forwarding/rules', [PortForwardingApiController::class, 'getPortForwardingRules']);
+    $app->router->post('/api/port-forwarding/rule/add', [PortForwardingApiController::class, 'addPortForwardingRule']);
+    $app->router->delete('/api/port-forwarding/rule/{id}', [PortForwardingApiController::class, 'deletePortForwardingRule']);
 
     // API маршруты для файрвола
     $app->router->get('/api/firewall/info', [FirewallController::class, 'getFirewallInfo']);

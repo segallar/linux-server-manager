@@ -8,6 +8,7 @@ class Controller
     public string $action = '';
     protected Router $router;
     protected Response $response;
+    protected Request $request;
 
     public function __construct()
     {
@@ -16,6 +17,7 @@ class Controller
         if (isset($app)) {
             $this->router = $app->router;
             $this->response = $app->response;
+            $this->request = $app->request;
         }
     }
 
