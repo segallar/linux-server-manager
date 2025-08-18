@@ -135,6 +135,7 @@ class CloudflareService extends BaseService implements CloudflareServiceInterfac
             'total_tunnels' => count($tunnels),
             'active_tunnels' => 0,
             'inactive_tunnels' => 0,
+            'total_connections' => 0,
             'installed' => $this->isInstalled(),
             'authenticated' => $this->isAuthenticated()
         ];
@@ -142,6 +143,8 @@ class CloudflareService extends BaseService implements CloudflareServiceInterfac
         foreach ($tunnels as $tunnel) {
             if ($tunnel['status'] === 'active') {
                 $stats['active_tunnels']++;
+                // Для активных туннелей добавляем примерное количество соединений
+                $stats['total_connections'] += 1;
             } else {
                 $stats['inactive_tunnels']++;
             }
