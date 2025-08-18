@@ -73,20 +73,6 @@
                             <i class="fas fa-network-wired"></i> Сеть
                         </a>
                     </li>
-                    
-                    <!-- Выпадающее меню для подразделов сети -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-cog"></i> Быстрый доступ
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/network/ssh"><i class="fas fa-terminal"></i> SSH туннели</a></li>
-                            <li><a class="dropdown-item" href="/network/port-forwarding"><i class="fas fa-exchange-alt"></i> Проброс портов</a></li>
-                            <li><a class="dropdown-item" href="/network/wireguard"><i class="fas fa-lock"></i> WireGuard</a></li>
-                            <li><a class="dropdown-item" href="/network/cloudflare"><i class="fas fa-cloud"></i> Cloudflare</a></li>
-                            <li><a class="dropdown-item" href="/network/routing"><i class="fas fa-route"></i> Маршрутизация</a></li>
-                        </ul>
-                    </li>
                 </ul>
             </div>
         </div>
