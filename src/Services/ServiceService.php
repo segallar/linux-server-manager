@@ -299,4 +299,12 @@ class ServiceService
 
         return $services;
     }
+
+    /**
+     * Получить список сервисов (алиас для getAllServices)
+     */
+    public function getServices(): array
+    {
+        return $this->getAllServices();
+    }
 }
