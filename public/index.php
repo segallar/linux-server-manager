@@ -30,6 +30,7 @@ try {
 
     // Регистрируем маршруты
     $app->router->get('/', [DashboardController::class, 'index']);
+    $app->router->get('/dashboard', [DashboardController::class, 'index']);
     $app->router->get('/system', [SystemController::class, 'index']);
     $app->router->get('/processes', [ProcessController::class, 'index']);
     $app->router->get('/services', [ServiceController::class, 'index']);
