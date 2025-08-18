@@ -171,7 +171,7 @@
                             </td>
                             <td>
                                 <?php 
-                                $cloudflareService = new \App\Services\CloudflareService();
+                                $cloudflareService = new \App\Services\Cloudflare\CloudflareService();
                                 $createdTime = $cloudflareService->formatCreatedTime($tunnel['created']);
                                 ?>
                                 <span class="text-muted"><?= $createdTime ?></span>
