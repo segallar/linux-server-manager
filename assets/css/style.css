@@ -222,15 +222,31 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
+    cursor: pointer;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .mobile-menu-toggle:hover {
     background: var(--accent-color);
     transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.mobile-menu-toggle:active {
+    transform: scale(0.95);
 }
 
 .mobile-menu-toggle i {
     font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.mobile-menu-toggle.active i {
+    transform: rotate(90deg);
 }
 
 /* Оверлей для мобильного меню */
@@ -275,7 +291,7 @@ body {
 /* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
     .mobile-menu-toggle {
-        display: block;
+        display: flex !important;
     }
     
     .sidebar {
@@ -394,6 +410,8 @@ body {
     .mobile-menu-toggle {
         top: 0.5rem;
         left: 0.5rem;
+        width: 44px;
+        height: 44px;
         padding: 0.5rem;
     }
     

@@ -139,17 +139,39 @@
             const sidebarOverlay = document.getElementById('sidebarOverlay');
             
             // Открытие/закрытие мобильного меню
-            mobileMenuToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('show');
-                sidebarOverlay.classList.toggle('show');
-                sidebarOverlay.style.display = sidebar.classList.contains('show') ? 'block' : 'none';
+            mobileMenuToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isOpen = sidebar.classList.contains('show');
+                
+                if (isOpen) {
+                    // Закрываем меню
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    mobileMenuToggle.classList.remove('active');
+                    setTimeout(() => {
+                        sidebarOverlay.style.display = 'none';
+                    }, 300);
+                } else {
+                    // Открываем меню
+                    sidebarOverlay.style.display = 'block';
+                    setTimeout(() => {
+                        sidebar.classList.add('show');
+                        sidebarOverlay.classList.add('show');
+                        mobileMenuToggle.classList.add('active');
+                    }, 10);
+                }
             });
             
             // Закрытие меню при клике на оверлей
             sidebarOverlay.addEventListener('click', function() {
                 sidebar.classList.remove('show');
                 sidebarOverlay.classList.remove('show');
-                sidebarOverlay.style.display = 'none';
+                mobileMenuToggle.classList.remove('active');
+                setTimeout(() => {
+                    sidebarOverlay.style.display = 'none';
+                }, 300);
             });
             
             // Закрытие меню при клике на ссылку (на мобильных)
@@ -159,7 +181,10 @@
                     if (window.innerWidth <= 768) {
                         sidebar.classList.remove('show');
                         sidebarOverlay.classList.remove('show');
-                        sidebarOverlay.style.display = 'none';
+                        mobileMenuToggle.classList.remove('active');
+                        setTimeout(() => {
+                            sidebarOverlay.style.display = 'none';
+                        }, 300);
                     }
                 });
             });
@@ -169,8 +194,31 @@
                 if (window.innerWidth > 768) {
                     sidebar.classList.remove('show');
                     sidebarOverlay.classList.remove('show');
+                    mobileMenuToggle.classList.remove('active');
                     sidebarOverlay.style.display = 'none';
                 }
+            });
+            
+            // Предотвращение скролла body когда меню открыто
+            function toggleBodyScroll(disable) {
+                if (disable) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+            }
+            
+            // Обновляем обработчик для управления скроллом
+            mobileMenuToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isOpen = sidebar.classList.contains('show');
+                toggleBodyScroll(!isOpen);
+            });
+            
+            sidebarOverlay.addEventListener('click', function() {
+                toggleBodyScroll(false);
             });
         });
     </script>
