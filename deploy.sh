@@ -113,42 +113,6 @@ EOF
     echo -e "${GREEN}✅ Nginx настроен${NC}"
 fi
 
-# Настраиваем Nginx (если установлен)
-if command -v nginx &> /dev/null; then
-    echo -e "${YELLOW}🌐 Настраиваем Nginx...${NC}"
-    
-    # Создаем конфигурацию Nginx
-    cat > /etc/nginx/sites-available/linux-server-manager << EOF
-server {
-    listen 80;
-    server_name $DOMAIN;
-    root $DEPLOY_PATH/public;
-    index index.php;
-
-    location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
-    }
-
-    location ~ \.php\$ {
-        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    location ~ /\.ht {
-        deny all;
-    }
-}
-EOF
-
-    # Включаем сайт
-    ln -sf /etc/nginx/sites-available/linux-server-manager /etc/nginx/sites-enabled/
-    nginx -t && systemctl reload nginx
-    
-    echo -e "${GREEN}✅ Nginx настроен${NC}"
-fi
-
 # Настраиваем SSL с Let's Encrypt (если установлен certbot)
 if command -v certbot &> /dev/null; then
     echo -e "${YELLOW}🔒 Настраиваем SSL...${NC}"
@@ -167,19 +131,30 @@ if command -v ufw &> /dev/null; then
     echo -e "${GREEN}✅ Файрвол настроен${NC}"
 fi
 
-# Создаем скрипт для автоматических обновлений
-cat > /usr/local/bin/update-linux-server-manager.sh << 'EOF'
-#!/bin/bash
-cd /var/www/html/linux-server-manager
-git pull origin main
-composer install --no-dev --optimize-autoloader
-chown -R www-data:www-data /var/www/html/linux-server-manager
-systemctl reload nginx
+# Настраиваем автоматические обновления через cron
+echo -e "${YELLOW}⏰ Настраиваем автоматические обновления...${NC}"
+
+# Создаем cron файл для автоматических обновлений
+cat > /etc/cron.d/linux-server-manager-auto-update << EOF
+# Автоматическое обновление Linux Server Manager
+# Проверка каждую минуту
+* * * * * root $DEPLOY_PATH/auto-update.sh > /dev/null 2>&1
+
+# Очистка старых логов каждые 24 часа
+0 2 * * * root find $DEPLOY_PATH/logs -name "*.log" -mtime +7 -delete > /dev/null 2>&1
 EOF
 
-chmod +x /usr/local/bin/update-linux-server-manager.sh
+chmod 644 /etc/cron.d/linux-server-manager-auto-update
+
+# Перезагружаем cron
+systemctl reload cron 2>/dev/null || systemctl reload crond 2>/dev/null
+
+echo -e "${GREEN}✅ Автоматические обновления настроены${NC}"
 
 echo -e "${GREEN}✅ Развертывание завершено!${NC}"
 echo -e "${BLUE}🌐 Приложение доступно по адресу: http://$DOMAIN${NC}"
-echo -e "${BLUE}📝 Для обновления используйте: /usr/local/bin/update-linux-server-manager.sh${NC}"
-echo -e "${BLUE}📊 Логи доступны в: /var/log/nginx/${NC}"
+echo -e "${BLUE}⏰ Автоматические обновления настроены (каждую минуту)${NC}"
+echo -e "${BLUE}📝 Логи обновлений: $DEPLOY_PATH/logs/auto-update.log${NC}"
+echo -e "${BLUE}📊 Логи Nginx: /var/log/nginx/${NC}"
+echo -e "${BLUE}⏸️ Для приостановки: touch $DEPLOY_PATH/.pause-auto-update${NC}"
+echo -e "${BLUE}🔄 Для возобновления: rm $DEPLOY_PATH/.pause-auto-update${NC}"
