@@ -299,6 +299,8 @@ class SystemService extends BaseService implements SystemServiceInterface
                     // Берем первый IP адрес для интерфейса
                     if (empty($currentInterface['ip'])) {
                         $currentInterface['ip'] = $matches[1];
+                        // Обновляем IP в массиве интерфейсов
+                        $interfaces[count($interfaces) - 1]['ip'] = $matches[1];
                     }
                 }
             }
