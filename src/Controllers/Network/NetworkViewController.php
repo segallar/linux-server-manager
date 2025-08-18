@@ -115,7 +115,8 @@ class NetworkViewController extends Controller implements NetworkViewControllerI
             'currentPage' => 'network',
             'interfaces' => $interfaces,
             'stats' => $stats,
-            'isInstalled' => $isInstalled
+            'isInstalled' => $isInstalled,
+            'wireguardService' => $wireguardService
         ]);
     }
 

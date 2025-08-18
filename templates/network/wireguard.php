@@ -139,7 +139,7 @@
                                 <?php 
                                 $activePeers = 0;
                                 foreach ($interface['peers'] as $peer) {
-                                    if ($peer['status'] === 'active') $activePeers++;
+                                    if ($peer['status'] === 'online') $activePeers++;
                                 }
                                 ?>
                                 <small class="text-muted">(<?= $activePeers ?> активных)</small>
@@ -222,16 +222,17 @@
                                 </td>
                                 <td>
                                     <?php 
-                                    $wireguardService = new \App\Services\WireGuardService();
                                     $handshakeTime = $wireguardService->formatHandshakeTime($peer['latest_handshake']);
                                     ?>
                                     <span class="text-muted"><?= $handshakeTime ?></span>
                                 </td>
                                 <td>
-                                    <?php if ($peer['status'] === 'active'): ?>
-                                        <span class="badge bg-success">Активен</span>
+                                    <?php if ($peer['status'] === 'online'): ?>
+                                        <span class="badge bg-success">Онлайн</span>
+                                    <?php elseif ($peer['status'] === 'recent'): ?>
+                                        <span class="badge bg-warning">Недавно</span>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary">Неактивен</span>
+                                        <span class="badge bg-secondary">Офлайн</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>

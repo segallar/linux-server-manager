@@ -28,7 +28,8 @@ class WireGuardController extends Controller
             'currentPage' => 'network',
             'interfaces' => $interfaces,
             'stats' => $stats,
-            'isInstalled' => $isInstalled
+            'isInstalled' => $isInstalled,
+            'wireguardService' => $this->wireguardService
         ]);
     }
 

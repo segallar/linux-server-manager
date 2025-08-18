@@ -94,6 +94,7 @@ class WireGuardService extends BaseService implements WireGuardServiceInterface
             // Пиры
             elseif (preg_match('/^peer:\s+(.+)$/', $line, $matches)) {
                 if ($currentPeer) {
+                    $currentPeer['status'] = $this->getPeerStatus($currentPeer['latest_handshake']);
                     $info['peers'][] = $currentPeer;
                 }
                 $currentPeer = [
@@ -132,6 +133,7 @@ class WireGuardService extends BaseService implements WireGuardServiceInterface
 
         // Добавляем последнего пира
         if ($currentPeer) {
+            $currentPeer['status'] = $this->getPeerStatus($currentPeer['latest_handshake']);
             $info['peers'][] = $currentPeer;
         }
 
@@ -224,7 +226,7 @@ class WireGuardService extends BaseService implements WireGuardServiceInterface
     /**
      * Форматировать время рукопожатия
      */
-    protected function formatHandshakeTime($handshakeTime): string
+    public function formatHandshakeTime($handshakeTime): string
     {
         if (empty($handshakeTime) || $handshakeTime === '0') {
             return 'Никогда';
@@ -254,7 +256,7 @@ class WireGuardService extends BaseService implements WireGuardServiceInterface
     /**
      * Получить статус пира
      */
-    protected function getPeerStatus($handshakeTime): string
+    public function getPeerStatus($handshakeTime): string
     {
         if (empty($handshakeTime) || $handshakeTime === '0') {
             return 'offline';
