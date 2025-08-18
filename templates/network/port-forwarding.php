@@ -12,25 +12,25 @@
     <div class="col-md-3">
         <div class="stats-card">
             <h3><i class="fas fa-link me-2"></i>Активные правила</h3>
-            <p class="value" id="active-rules">7</p>
+            <p class="value" id="active-rules"><?= $stats['active_rules'] ?? 0 ?></p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card">
-            <h3><i class="fas fa-network-wired me-2"></i>Порты</h3>
-            <p class="value" id="total-ports">12</p>
+            <h3><i class="fas fa-network-wired me-2"></i>Всего правил</h3>
+            <p class="value" id="total-rules"><?= $stats['total_rules'] ?? 0 ?></p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card">
-            <h3><i class="fas fa-shield-alt me-2"></i>Защищенные</h3>
-            <p class="value" id="protected-ports">8</p>
+            <h3><i class="fas fa-shield-alt me-2"></i>Подключения</h3>
+            <p class="value" id="connections"><?= $stats['total_connections'] ?? 0 ?></p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card">
-            <h3><i class="fas fa-exclamation-triangle me-2"></i>Предупреждения</h3>
-            <p class="value" id="warnings">2</p>
+            <h3><i class="fas fa-tachometer-alt me-2"></i>Пропускная способность</h3>
+            <p class="value" id="bandwidth"><?= $stats['bandwidth'] ?? '0 MB/s' ?></p>
         </div>
     </div>
 </div>
@@ -49,118 +49,69 @@
                 </button>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-custom">
-                        <thead>
-                            <tr>
-                                <th>Название</th>
-                                <th>Протокол</th>
-                                <th>Внешний порт</th>
-                                <th>Внутренний IP</th>
-                                <th>Внутренний порт</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Web Server</td>
-                                <td>TCP</td>
-                                <td>80</td>
-                                <td>192.168.1.100</td>
-                                <td>80</td>
-                                <td><span class="status-indicator status-online"></span>Активно</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning me-1" title="Остановить">
-                                        <i class="fas fa-pause"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info me-1" title="Тест">
-                                        <i class="fas fa-play"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" title="Удалить">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>HTTPS Server</td>
-                                <td>TCP</td>
-                                <td>443</td>
-                                <td>192.168.1.100</td>
-                                <td>443</td>
-                                <td><span class="status-indicator status-online"></span>Активно</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning me-1" title="Остановить">
-                                        <i class="fas fa-pause"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info me-1" title="Тест">
-                                        <i class="fas fa-play"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" title="Удалить">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>SSH Access</td>
-                                <td>TCP</td>
-                                <td>2222</td>
-                                <td>192.168.1.50</td>
-                                <td>22</td>
-                                <td><span class="status-indicator status-online"></span>Активно</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning me-1" title="Остановить">
-                                        <i class="fas fa-pause"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info me-1" title="Тест">
-                                        <i class="fas fa-play"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" title="Удалить">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Database</td>
-                                <td>TCP</td>
-                                <td>3306</td>
-                                <td>192.168.1.200</td>
-                                <td>3306</td>
-                                <td><span class="status-indicator status-warning"></span>Ограничено</td>
-                                <td>
-                                    <button class="btn btn-sm btn-success me-1" title="Разрешить">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info me-1" title="Тест">
-                                        <i class="fas fa-play"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" title="Удалить">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>FTP Server</td>
-                                <td>TCP</td>
-                                <td>21</td>
-                                <td>192.168.1.150</td>
-                                <td>21</td>
-                                <td><span class="status-indicator status-offline"></span>Отключено</td>
-                                <td>
-                                    <button class="btn btn-sm btn-success me-1" title="Включить">
-                                        <i class="fas fa-play"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info me-1" title="Тест">
-                                        <i class="fas fa-play"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" title="Удалить">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <?php if (empty($rules)): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Правила проброса портов не найдены</h5>
+                        <p class="text-muted">Создайте первое правило для начала работы</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPortForwardModal">
+                            <i class="fas fa-plus me-2"></i>Создать правило
+                        </button>
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Протокол</th>
+                                    <th>Внешний порт</th>
+                                    <th>Внутренний IP</th>
+                                    <th>Внутренний порт</th>
+                                    <th>Статус</th>
+                                    <th>Создано</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($rules as $rule): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($rule['name']) ?></td>
+                                        <td><?= htmlspecialchars($rule['protocol']) ?></td>
+                                        <td><?= htmlspecialchars($rule['external_port']) ?></td>
+                                        <td><?= htmlspecialchars($rule['internal_ip']) ?></td>
+                                        <td><?= htmlspecialchars($rule['internal_port']) ?></td>
+                                        <td>
+                                            <?php if ($rule['status'] === 'active'): ?>
+                                                <span class="status-indicator status-online"></span>Активно
+                                            <?php else: ?>
+                                                <span class="status-indicator status-offline"></span>Отключено
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($rule['created']) ?></td>
+                                        <td>
+                                            <?php if ($rule['status'] === 'active'): ?>
+                                                <button class="btn btn-sm btn-warning me-1" title="Остановить" onclick="disablePortForwardRule('<?= $rule['id'] ?>')">
+                                                    <i class="fas fa-pause"></i>
+                                                </button>
+                                            <?php else: ?>
+                                                <button class="btn btn-sm btn-success me-1" title="Включить" onclick="enablePortForwardRule('<?= $rule['id'] ?>')">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                            <button class="btn btn-sm btn-info me-1" title="Тест" onclick="testPortForwardRule('<?= $rule['id'] ?>')">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" title="Удалить" onclick="deletePortForwardRule('<?= $rule['id'] ?>')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -321,3 +272,98 @@
         </div>
     </div>
 </div>
+
+<script>
+// Функции для работы с пробросом портов
+
+function enablePortForwardRule(ruleId) {
+    if (confirm('Включить правило проброса портов?')) {
+        makeAjaxRequest(`/api/port-forwarding/rule/${ruleId}/enable`, 'POST').done(function(data) {
+            if (data.success) {
+                showAlert('Правило включено', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка включения правила: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
+    }
+}
+
+function disablePortForwardRule(ruleId) {
+    if (confirm('Отключить правило проброса портов?')) {
+        makeAjaxRequest(`/api/port-forwarding/rule/${ruleId}/disable`, 'POST').done(function(data) {
+            if (data.success) {
+                showAlert('Правило отключено', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка отключения правила: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
+    }
+}
+
+function deletePortForwardRule(ruleId) {
+    if (confirm('Удалить правило проброса портов? Это действие нельзя отменить.')) {
+        makeAjaxRequest(`/api/port-forwarding/rule/${ruleId}`, 'DELETE').done(function(data) {
+            if (data.success) {
+                showAlert('Правило удалено', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка удаления правила: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
+    }
+}
+
+function testPortForwardRule(ruleId) {
+    showAlert('Тестирование правила...', 'info');
+    makeAjaxRequest(`/api/port-forwarding/rule/${ruleId}/test`, 'POST').done(function(data) {
+        if (data.success) {
+            showAlert('Правило работает корректно', 'success');
+        } else {
+            showAlert('Ошибка тестирования: ' + data.message, 'warning');
+        }
+    }).fail(function() {
+        showAlert('Ошибка подключения к серверу', 'danger');
+    });
+}
+
+// Обработчик создания нового правила
+$(document).ready(function() {
+    $('#createPortForwardBtn').click(function() {
+        const formData = {
+            name: $('#ruleName').val(),
+            protocol: $('#protocol').val(),
+            external_port: $('#externalPort').val(),
+            internal_port: $('#internalPort').val(),
+            internal_ip: $('#internalIP').val(),
+            description: $('#description').val(),
+            enabled: $('#enableRule').is(':checked')
+        };
+        
+        // Проверяем обязательные поля
+        if (!formData.name || !formData.external_port || !formData.internal_port || !formData.internal_ip) {
+            showAlert('Заполните все обязательные поля', 'warning');
+            return;
+        }
+        
+        makeAjaxRequest('/api/port-forwarding/rule/add', 'POST', formData).done(function(data) {
+            if (data.success) {
+                showAlert('Правило создано успешно', 'success');
+                $('#newPortForwardModal').modal('hide');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка создания правила: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
+    });
+});
+</script>

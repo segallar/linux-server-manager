@@ -11,17 +11,59 @@ class NetworkController extends Controller
 {
     public function ssh()
     {
+        $networkService = new NetworkService();
+        
+        // Получаем реальные данные о SSH туннелях
+        $tunnels = $networkService->getSSHTunnels();
+        
+        // Вычисляем статистику
+        $stats = [
+            'active_tunnels' => 0,
+            'total_tunnels' => count($tunnels),
+            'connections' => 0,
+            'uptime' => '0д 0ч'
+        ];
+        
+        foreach ($tunnels as $tunnel) {
+            if ($tunnel['status'] === 'running') {
+                $stats['active_tunnels']++;
+            }
+        }
+        
         return $this->render('network/ssh', [
             'title' => 'SSH туннели',
-            'currentPage' => 'network'
+            'currentPage' => 'network',
+            'tunnels' => $tunnels,
+            'stats' => $stats
         ]);
     }
     
     public function portForwarding()
     {
+        $networkService = new NetworkService();
+        
+        // Получаем реальные данные о правилах проброса портов
+        $rules = $networkService->getPortForwardingRules();
+        
+        // Вычисляем статистику
+        $stats = [
+            'active_rules' => 0,
+            'total_rules' => count($rules),
+            'total_connections' => 0,
+            'bandwidth' => '0 MB/s'
+        ];
+        
+        foreach ($rules as $rule) {
+            if ($rule['status'] === 'active') {
+                $stats['active_rules']++;
+            }
+        }
+        
         return $this->render('network/port-forwarding', [
             'title' => 'Проброс портов',
-            'currentPage' => 'network'
+            'currentPage' => 'network',
+            'rules' => $rules,
+            'stats' => $stats
         ]);
     }
     

@@ -12,19 +12,19 @@
     <div class="col-md-3">
         <div class="stats-card">
             <h3><i class="fas fa-link me-2"></i>Активные туннели</h3>
-            <p class="value" id="active-tunnels">3</p>
+            <p class="value" id="active-tunnels"><?= $stats['active_tunnels'] ?? 0 ?></p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card">
-            <h3><i class="fas fa-users me-2"></i>Подключения</h3>
-            <p class="value" id="connections">12</p>
+            <h3><i class="fas fa-users me-2"></i>Всего туннелей</h3>
+            <p class="value" id="total-tunnels"><?= $stats['total_tunnels'] ?? 0 ?></p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card">
             <h3><i class="fas fa-clock me-2"></i>Время работы</h3>
-            <p class="value" id="uptime">2д 15ч</p>
+            <p class="value" id="uptime"><?= $stats['uptime'] ?? '0д 0ч' ?></p>
         </div>
     </div>
     <div class="col-md-3">
@@ -49,76 +49,67 @@
                 </button>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-custom">
-                        <thead>
-                            <tr>
-                                <th>Название</th>
-                                <th>Локальный порт</th>
-                                <th>Удаленный хост</th>
-                                <th>Удаленный порт</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Web Server Tunnel</td>
-                                <td>8080</td>
-                                <td>192.168.1.100</td>
-                                <td>80</td>
-                                <td><span class="status-indicator status-online"></span>Активен</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning me-1" title="Остановить">
-                                        <i class="fas fa-pause"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger me-1" title="Удалить">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info" title="Логи">
-                                        <i class="fas fa-file-alt"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Database Tunnel</td>
-                                <td>3307</td>
-                                <td>10.0.0.50</td>
-                                <td>3306</td>
-                                <td><span class="status-indicator status-online"></span>Активен</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning me-1" title="Остановить">
-                                        <i class="fas fa-pause"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger me-1" title="Удалить">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info" title="Логи">
-                                        <i class="fas fa-file-alt"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>SSH Tunnel</td>
-                                <td>2222</td>
-                                <td>172.16.0.10</td>
-                                <td>22</td>
-                                <td><span class="status-indicator status-offline"></span>Остановлен</td>
-                                <td>
-                                    <button class="btn btn-sm btn-success me-1" title="Запустить">
-                                        <i class="fas fa-play"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger me-1" title="Удалить">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info" title="Логи">
-                                        <i class="fas fa-file-alt"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <?php if (empty($tunnels)): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-terminal fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">SSH туннели не найдены</h5>
+                        <p class="text-muted">Создайте первый SSH туннель для начала работы</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTunnelModal">
+                            <i class="fas fa-plus me-2"></i>Создать туннель
+                        </button>
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Локальный порт</th>
+                                    <th>Удаленный хост</th>
+                                    <th>Удаленный порт</th>
+                                    <th>Статус</th>
+                                    <th>Создан</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($tunnels as $tunnel): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($tunnel['name']) ?></td>
+                                        <td><?= htmlspecialchars($tunnel['local_port']) ?></td>
+                                        <td><?= htmlspecialchars($tunnel['host']) ?></td>
+                                        <td><?= htmlspecialchars($tunnel['remote_port']) ?></td>
+                                        <td>
+                                            <?php if ($tunnel['status'] === 'running'): ?>
+                                                <span class="status-indicator status-online"></span>Активен
+                                            <?php else: ?>
+                                                <span class="status-indicator status-offline"></span>Остановлен
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($tunnel['created']) ?></td>
+                                        <td>
+                                            <?php if ($tunnel['status'] === 'running'): ?>
+                                                <button class="btn btn-sm btn-warning me-1" title="Остановить" onclick="stopSSHTunnel('<?= $tunnel['id'] ?>')">
+                                                    <i class="fas fa-pause"></i>
+                                                </button>
+                                            <?php else: ?>
+                                                <button class="btn btn-sm btn-success me-1" title="Запустить" onclick="startSSHTunnel('<?= $tunnel['id'] ?>')">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                            <button class="btn btn-sm btn-danger me-1" title="Удалить" onclick="deleteSSHTunnel('<?= $tunnel['id'] ?>')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-info" title="Логи" onclick="viewSSHTunnelLogs('<?= $tunnel['id'] ?>')">
+                                                <i class="fas fa-file-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -228,3 +219,89 @@
         </div>
     </div>
 </div>
+
+<script>
+// Функции для работы с SSH туннелями
+
+function startSSHTunnel(tunnelId) {
+    if (confirm('Запустить SSH туннель?')) {
+        makeAjaxRequest(`/api/ssh/tunnel/${tunnelId}/start`, 'POST').done(function(data) {
+            if (data.success) {
+                showAlert('SSH туннель запущен', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка запуска SSH туннеля: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
+    }
+}
+
+function stopSSHTunnel(tunnelId) {
+    if (confirm('Остановить SSH туннель?')) {
+        makeAjaxRequest(`/api/ssh/tunnel/${tunnelId}/stop`, 'POST').done(function(data) {
+            if (data.success) {
+                showAlert('SSH туннель остановлен', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка остановки SSH туннеля: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
+    }
+}
+
+function deleteSSHTunnel(tunnelId) {
+    if (confirm('Удалить SSH туннель? Это действие нельзя отменить.')) {
+        makeAjaxRequest(`/api/ssh/tunnel/${tunnelId}`, 'DELETE').done(function(data) {
+            if (data.success) {
+                showAlert('SSH туннель удален', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка удаления SSH туннеля: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
+    }
+}
+
+function viewSSHTunnelLogs(tunnelId) {
+    showAlert('Функция просмотра логов будет доступна в следующей версии', 'info');
+}
+
+// Обработчик создания нового туннеля
+$(document).ready(function() {
+    $('#createTunnelBtn').click(function() {
+        const formData = {
+            name: $('#tunnelName').val(),
+            local_port: $('#localPort').val(),
+            remote_host: $('#remoteHost').val(),
+            remote_port: $('#remotePort').val(),
+            username: $('#sshUser').val(),
+            ssh_key: $('#sshKey').val()
+        };
+        
+        // Проверяем обязательные поля
+        if (!formData.name || !formData.local_port || !formData.remote_host || 
+            !formData.remote_port || !formData.username) {
+            showAlert('Заполните все обязательные поля', 'warning');
+            return;
+        }
+        
+        makeAjaxRequest('/api/ssh/tunnel/create', 'POST', formData).done(function(data) {
+            if (data.success) {
+                showAlert('SSH туннель создан успешно', 'success');
+                $('#newTunnelModal').modal('hide');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Ошибка создания SSH туннеля: ' + data.message, 'danger');
+            }
+        }).fail(function() {
+            showAlert('Ошибка подключения к серверу', 'danger');
+        });
+    });
+});
+</script>
