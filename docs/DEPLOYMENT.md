@@ -108,87 +108,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### Вариант 3: Docker (рекомендуется)
-
-Создайте файл `Dockerfile`:
-
-```dockerfile
-FROM php:8.1-apache
-
-# Установите зависимости
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libzip-dev \
-    && docker-php-ext-install zip
-
-# Установите Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Скопируйте файлы проекта
-COPY . /var/www/html/
-WORKDIR /var/www/html/
-
-# Установите зависимости
-RUN composer install --no-dev --optimize-autoloader
-
-# Настройте Apache
-RUN a2enmod rewrite
-COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
-
-# Настройте права доступа
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html
-RUN chmod -R 777 /var/www/html/logs
-
-EXPOSE 80
-
-CMD ["apache2-foreground"]
-```
-
-Создайте файл `docker/apache.conf`:
-
-```apache
-<VirtualHost *:80>
-    DocumentRoot /var/www/html/public
-    
-    <Directory /var/www/html/public>
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-Создайте файл `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  linux-server-manager:
-    build: .
-    ports:
-      - "8080:80"
-    volumes:
-      - ./logs:/var/www/html/logs
-    environment:
-      - APP_ENV=production
-```
-
-Запуск:
-
-```bash
-# Соберите и запустите
-docker-compose up -d
-
-# Проверьте статус
-docker-compose ps
-
-# Посмотрите логи
-docker-compose logs -f
-```
-
-### Вариант 4: Автоматический скрипт развертывания
+### Вариант 3: Автоматический скрипт развертывания
 
 Создайте файл `deploy.sh`:
 
@@ -395,8 +315,8 @@ sudo certbot certificates
 
 ## 🎯 Рекомендации
 
-- Используйте Docker для изоляции окружения
 - Настройте автоматические резервные копии
 - Регулярно обновляйте систему и зависимости
 - Мониторьте использование ресурсов
 - Настройте SSL для безопасности
+- Используйте автоматические скрипты развертывания
