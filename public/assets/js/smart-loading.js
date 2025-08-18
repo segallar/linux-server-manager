@@ -123,24 +123,31 @@ class SmartLoadingIndicator {
     }
 
     setupPageTransitions() {
-        const slowPages = [
-            '/network/cloudflare',
-            '/services',
-            '/packages'
-        ];
-
-        // Показываем индикатор при клике на ссылки
+        // Показываем индикатор при клике на все ссылки навигации
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
             if (link) {
                 const href = link.getAttribute('href');
-                if (slowPages.some(page => href === page)) {
+                // Проверяем, что это внутренняя ссылка и не якорь
+                if (href && href.startsWith('/') && !href.startsWith('#')) {
+                    // Показываем индикатор немедленно
                     this.show(href);
                 }
             }
         });
 
-        // Показываем индикатор при прямом переходе
+        // Показываем индикатор при навигации браузера (назад/вперед)
+        window.addEventListener('popstate', () => {
+            this.show(window.location.pathname);
+        });
+
+        // Показываем индикатор при прямом переходе на медленные страницы
+        const slowPages = [
+            '/network/cloudflare',
+            '/services',
+            '/packages'
+        ];
+        
         if (slowPages.some(page => window.location.pathname === page)) {
             this.show(window.location.pathname);
         }
@@ -154,9 +161,19 @@ class SmartLoadingIndicator {
         this.element.style.display = 'flex';
 
         const messages = {
-            '/network/cloudflare': 'Получение данных от Cloudflare API...',
+            '/': 'Загрузка главной страницы...',
+            '/dashboard': 'Загрузка панели управления...',
+            '/system': 'Загрузка системной информации...',
+            '/processes': 'Загрузка списка процессов...',
             '/services': 'Проверка статуса системных сервисов...',
-            '/packages': 'Загрузка списка пакетов...'
+            '/packages': 'Загрузка списка пакетов...',
+            '/network/ssh': 'Загрузка SSH туннелей...',
+            '/network/port-forwarding': 'Загрузка правил проброса портов...',
+            '/network/wireguard': 'Загрузка WireGuard интерфейсов...',
+            '/network/cloudflare': 'Получение данных от Cloudflare API...',
+            '/network/routing': 'Загрузка таблицы маршрутов...',
+            '/network/ipsec': 'Загрузка IPSec туннелей...',
+            '/network/vpn': 'Загрузка VPN соединений...'
         };
 
         this.messageElement.textContent = messages[pagePath] || 'Загрузка данных...';
@@ -237,11 +254,19 @@ class SmartLoadingIndicator {
     startProgressAnimation() {
         let progress = 0;
         this.progressInterval = setInterval(() => {
-            progress += Math.random() * 10;
+            // Более быстрая анимация в начале
+            if (progress < 30) {
+                progress += Math.random() * 15;
+            } else if (progress < 70) {
+                progress += Math.random() * 8;
+            } else {
+                progress += Math.random() * 3;
+            }
+            
             if (progress > 85) progress = 85;
             
             this.progressBar.style.width = progress + '%';
-        }, 300);
+        }, 150); // Уменьшили интервал для более плавной анимации
     }
 
     stopProgressAnimation() {
