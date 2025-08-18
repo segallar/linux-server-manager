@@ -17,6 +17,11 @@ class SmartLoadingIndicator {
         
         // Убираем автоматический показ при загрузке DOM
         // Индикатор будет показываться только при переходах между страницами
+        
+        // Сразу скрываем индикатор при инициализации
+        setTimeout(() => {
+            this.hide();
+        }, 100);
     }
 
     createIndicator() {
@@ -126,15 +131,18 @@ class SmartLoadingIndicator {
     }
 
     setupPageTransitions() {
-        // Перехватываем все клики на ссылки
+        // Перехватываем только клики на реальные ссылки навигации
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
             if (link && link.href) {
                 const url = new URL(link.href);
                 const path = url.pathname;
                 
-                // Проверяем, что это внутренняя ссылка
-                if (path && path.startsWith('/') && !path.startsWith('#')) {
+                // Проверяем, что это внутренняя ссылка и НЕ выпадающее меню
+                if (path && path.startsWith('/') && !path.startsWith('#') && 
+                    !link.classList.contains('dropdown-toggle') && 
+                    !link.hasAttribute('data-bs-toggle')) {
+                    
                     // Показываем индикатор НЕМЕДЛЕННО
                     this.show(path);
                     
@@ -147,13 +155,10 @@ class SmartLoadingIndicator {
             }
         }, true);
 
-        // Показываем индикатор при навигации браузера (назад/вперед)
-        window.addEventListener('popstate', () => {
-            this.show(window.location.pathname);
-        });
-
-        // Убираем автоматический показ для медленных страниц
-        // Индикатор будет показываться только при переходах между страницами
+        // Убираем показ при навигации браузера - это может вызывать проблемы
+        // window.addEventListener('popstate', () => {
+        //     this.show(window.location.pathname);
+        // });
     }
 
     show(pagePath = '') {
@@ -203,9 +208,23 @@ class SmartLoadingIndicator {
     hide() {
         if (!this.isVisible) return;
 
+        console.log('🛑 Скрытие индикатора загрузки');
+        
         this.isVisible = false;
-        this.element.style.display = 'none';
         this.stopProgressAnimation();
+        
+        // Принудительно скрываем элемент
+        this.element.style.display = 'none';
+        this.element.style.opacity = '0';
+        this.element.style.visibility = 'hidden';
+        
+        // Сбрасываем прогресс
+        if (this.progressBar) {
+            this.progressBar.style.width = '0%';
+        }
+        
+        // Сбрасываем время
+        this.startTime = null;
     }
 
     checkCacheForPage(pagePath) {
