@@ -1,11 +1,14 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">Системная информация</h1>
-                <button type="button" class="btn btn-outline-primary" onclick="location.reload()">
-                    <i class="fas fa-sync-alt"></i> Обновить
-                </button>
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                <h1 class="h3 mb-0 mb-2 mb-md-0">Системная информация</h1>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> 
+                        <span class="d-none d-sm-inline">Обновить</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
